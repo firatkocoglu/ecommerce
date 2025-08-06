@@ -46,6 +46,6 @@ class AuditLog extends Model
 
     public function getActionLabelAttribute()
     {
-        return $this->action->label();
+        return $this->action->label() ?? '-';
     }
 }
