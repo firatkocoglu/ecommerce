@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\TransactionStatus;
-use App\TransactionTypes;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionTypes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

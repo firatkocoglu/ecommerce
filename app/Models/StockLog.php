@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\StockChange;
+use App\Enums\StockChange;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

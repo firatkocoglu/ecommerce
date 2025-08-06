@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\CouponType;
+use App\Enums\CouponType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

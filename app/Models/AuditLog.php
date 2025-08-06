@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\AuditTypes;
+use App\Enums\AuditTypes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

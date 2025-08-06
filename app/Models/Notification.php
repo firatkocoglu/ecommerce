@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\NotificationTypes;
+use App\Enums\NotificationTypes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

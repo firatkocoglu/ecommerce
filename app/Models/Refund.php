@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\RefundStatus;
+use App\Enums\RefundStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -50,6 +50,11 @@ class Refund extends Model
     public function admin()
     {
         return $this->belongsTo(Admin::class);
+    }
+
+    public function returnRequest()
+    {
+        return $this->belongsTo(ReturnRequest::class);
     }
 
     public function getStatusLabelAttribute()
