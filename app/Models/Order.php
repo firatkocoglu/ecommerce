@@ -31,9 +31,15 @@ class Order extends Model
         "formatted_total_weight",
     ];
 
+    protected $with = [
+        'items',
+        'payment',
+    ];
+
     public function user(){
         return $this->belongsTo(User::class);
     }
+
 
      public function items() {
         return $this->hasMany(OrderItem::class);
@@ -45,6 +51,10 @@ class Order extends Model
 
     public function billingAddress() {
         return $this->belongsTo(Address::class, 'billing_address_id');
+    }
+
+    public function payment() {
+        return $this->hasOne(Payment::class);
     }
 
     public function getTotalPriceLiraAttribute() {
