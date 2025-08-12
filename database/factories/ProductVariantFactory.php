@@ -17,10 +17,10 @@ class ProductVariantFactory extends Factory
     public function definition(): array
     {
         return [
-            'color' => $this->faker->colorName(),
-            'size' => $this->faker->randomElement(['S', 'M', 'L', 'XL']),
-            'weight' => $this->faker->numberBetween(100, 5000),
-            'sku' => $this->faker->unique()->bothify('SKU-###??'),
+            'color' => fake()->colorName(),
+            'size' => fake()->randomElement(['S', 'M', 'L', 'XL']),
+            'weight' => fake()->numberBetween(100, 5000),
+            'sku' => fake()->unique()->bothify('SKU-###??'),
             'created_at' => now(),
         ];
     }

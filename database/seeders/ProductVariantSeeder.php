@@ -16,13 +16,13 @@ class ProductVariantSeeder extends Seeder
         $products = Product::all();
 
         foreach ($products as $product) {
-            $variantCount = rand(1, 3);
+            $variantCount = fake()->numberBetween(1, 3);
 
             ProductVariant::factory()
                     ->count($variantCount)
+                    ->for($product)
                     ->make()
                     ->each(function ($variant) use ($product) {
-                        $variant->product_id = $product->id;
                         $variant->price = $product->price + rand(0, 5000);
                         $variant->save();
                     });
