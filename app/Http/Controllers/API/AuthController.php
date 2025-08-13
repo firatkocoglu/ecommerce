@@ -27,6 +27,8 @@ class AuthController extends Controller
                 'role' => 'customer',
         ]);
 
+            $user->sendEmailVerificationNotification();
+            
             Auth::login($user);
             $request->session()->regenerate();
 
