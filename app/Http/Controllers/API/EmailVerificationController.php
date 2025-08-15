@@ -20,6 +20,7 @@ class EmailVerificationController extends Controller
             return response()->json(['message' => 'Email is already verified.'], 200);
         } 
 
+        
         $request->user()->sendEmailVerificationNotification();
 
         return response()->json(['message' => 'Verification email sent successfully.'], 200);
@@ -40,6 +41,7 @@ class EmailVerificationController extends Controller
             return $request->expectsJson() ? response()->json(['message' => 'Email is already verified.'], 200) : redirect(rtrim(config('app.frontend_url', '/'), '/'))->with('status', 'Email is already verified.');
         }
 
+        // Fulfill the email verification request, $verificationRequest is an instance of EmailVerificationRequest, so it has access to fulfill method
         $verificationRequest->fulfill();
 
         return $request->expectsJson() ? response()->json(['message' => 'Email verified successfully.'], 200) : redirect(rtrim(config('app.frontend_url', '/'), '/'))->with('status', 'Email verified successfully.');
