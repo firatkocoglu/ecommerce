@@ -131,7 +131,7 @@ class Outbox extends Model
     }
 
     public function failWithBackoff(string $errorMessage, int $baseSeconds = 60, int $maxSeconds = 3600){
-        $this->attempts++;
+        $this->attempts = ($this->attempts ?? 0) + 1;
         $delay = min($maxSeconds, $baseSeconds * (2 ** max(0, $this->attempts - 1)));
         $this->next_attempt_at = now()->addSeconds($delay);
         $this->error = Str::limit($errorMessage, 1000);
