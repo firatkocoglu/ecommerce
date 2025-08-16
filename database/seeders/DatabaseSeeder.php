@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Product;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -16,6 +14,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            RolePermissionSeeder::class,
+            AdminSeeder::class,
             UserSeeder::class,
             ProductSeeder::class,
             ProductVariantSeeder::class,
