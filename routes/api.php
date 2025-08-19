@@ -1,10 +1,17 @@
 <?php
 
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\PasswordResetController;
-use App\Http\Controllers\API\EmailVerificationController;
 use Illuminate\Support\Facades\Route;
 
+// Import API Auth Controllers
+use App\Http\Controllers\API\V1\APIAuth\AuthController;
+use App\Http\Controllers\API\V1\APIAuth\PasswordResetController;
+use App\Http\Controllers\API\V1\APIAuth\EmailVerificationController;
+
+// Import API Product Controllers
+use App\Http\Controllers\API\V1\Products\ProductApiController;
+
+// Import API Category Controllers
+use App\Http\Controllers\API\V1\Categories\CategoryApiController;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware('spa')->group(function () {
@@ -15,7 +22,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.forgot');
         Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1')->name('password.reset');
 
-    
+        // Product endpoints
+        Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
+        Route::get('/products/{product:slug}', [ProductApiController::class, 'show'])->name('products.show');
+
+        // Category endpoint
+        Route::get('/categories', [CategoryApiController::class, 'index'])->name('categories.index');
+        Route::get('/categories/{category:slug}', [CategoryApiController::class, 'show'])->name('categories.show');
 
         Route::middleware('auth:sanctum')->group(function () {
             //Email verification feature

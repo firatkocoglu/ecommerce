@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
         $admin = Admin::factory()->create([
             'name' => 'Fırat Koçoğlu',
             'email' => 'fratkocogl@gmail.com',
-            'password' => '12121994fx'
+            'password' => env('ADMIN_PASSWORD'),
         ]);
         
         $admin->assignRole('admin');
