@@ -22,5 +22,11 @@ class Category extends Model
     public function children() {
         return $this->hasMany(Category::class, 'parent_id');
     }
+    
+    public function products()
+    {
+        // Many-to-many: a category can have many products and a product can belong to many categories
+        // Pivot table: category_product (category_id, product_id)
+        return $this->belongsToMany(Product::class, 'category_product', 'category_id', 'product_id');
+    }
 }
-

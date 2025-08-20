@@ -39,6 +39,7 @@ class UpdateCategoryRequest extends FormRequest
     }
     public function after(): array {
         return [
+            // Avoid self parenting category
             function ($validator) {
                 $id = (int) $this->route('id');
                 if ($this->filled('parent_id')) {

@@ -6,19 +6,22 @@ use App\Models\Category;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
 
     public function listPaginated(int $perPage = 20): LengthAwarePaginator{
         return Category::query()
-        ->withCount('children')
+        ->withCount(['children', 'products'])
         ->with(['parent:id,name,slug'])
         ->latest('id')
         ->paginate($perPage);
     }
 
     public function tree(int $depth = 2): Collection {
+
+        // Set cache time and parameter
         $ttl = now()->addMinutes(45 + random_int(0, 10));
         $key = "categories:tree:depth:{$depth}";
 
@@ -43,12 +46,14 @@ class CategoryService
     public function findById(int $id): Category {
         return Category::query()
             ->with(['parent:id,name,slug', 'children:id,name,slug,parent_id'])
+            ->withCount('products')
             ->findOrFail($id);
     }
 
     public function findBySlug(string $slug): Category {
         return Category::query()
             ->with(['parent:id,name,slug', 'children:id,name,slug,parent_id'])
+            ->withCount('products')
             ->where('slug', $slug)
             ->sole();
     }
@@ -56,11 +61,58 @@ class CategoryService
     // Implement create, update and delete services
     public function create(array $data): Category {
         return DB::transaction(function () use ($data) {
-            $category = Category::create([
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'parent_id' => $data['parent_id'] ?? null,
-            ]);
-        })
+            $category = Category::create($data);
+
+            DB::afterCommit(function () {
+                // Flush existing cache
+                Cache::tags(['categories'])->flush();
+            });
+            return $category->load(['parent:id,name,slug']);
+        });
+    }
+
+    public function update(int $id, array $data): Category {
+            $category = Category::findOrFail($id);
+
+            // Don't write the changes to db immediately
+            $category->fill($data);
+
+            // Any changes made? 
+            if (! $category->isDirty()) {
+                return $category->load(['parent:id,name,slug', 'children:id,name,slug,parent_id']);
+            }
+
+            // If any changes made then start writing to db.
+            DB::transaction(function () use ($category) {
+                $category->save();
+
+                DB::afterCommit(function () {
+                    Cache::tags(['categories'])->flush();
+                });
+            });
+
+            return $category->refresh()->load(['parent:id,name,slug', 'children:id,name,slug,parent_id']);
+    }
+
+
+    public function delete(int $id): void {
+        DB::transaction(function () use ($id) {
+            // Lock category for deletion
+            $category = Category::whereKey($id)->lockForUpdate()->firstOrFail();
+
+            if ($category->children()->exists()) {
+                abort(422, 'Cannot delete category with children.');
+            }
+
+            if ($category->products()->exists()) {
+                abort(422, 'Cannot delete category with products.');
+            }
+
+            $category->delete();
+
+            DB::afterCommit(function () {
+                Cache::tags(['categories'])->flush();
+            });
+        });
     }
 }
