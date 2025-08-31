@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             AdminSeeder::class,
             UserSeeder::class,
-            ProductSeeder::class,
-            ProductVariantSeeder::class,
-            ProductImageSeeder::class,
-            StockSeeder::class,
+            // ProductSeeder::class,
+            // ProductVariantSeeder::class,
+            // ProductImageSeeder::class,
+            // StockSeeder::class,
         ]);
     }
 }

@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+// Import Admin Controller
+use App\Http\Controllers\API\V1\Admin\AdminAuth;
+
 // Import API Auth Controllers
 use App\Http\Controllers\API\V1\APIAuth\AuthController;
 use App\Http\Controllers\API\V1\APIAuth\PasswordResetController;
@@ -11,9 +14,43 @@ use App\Http\Controllers\API\V1\APIAuth\EmailVerificationController;
 use App\Http\Controllers\API\V1\Products\ProductApiController;
 
 // Import API Category Controllers
-use App\Http\Controllers\API\V1\Categories\CategoryApiController;
+use App\Http\Controllers\API\V1\Categories\CategoryAPIController;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
+    /* **
+    Admin-only routes
+    ** */
+
+    Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login');
+    
+    Route::middleware(['auth:sanctum', 'role:admin,admin'])->group(function () {
+            Route::get('/admin/me', [AdminAuth::class, 'me'])->name('admin.me');
+            Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
+            Route::post('/admin/logout-all', [AdminAuth::class, 'logoutAll'])->name('admin.logout.all');
+
+            Route::post('/categories', [CategoryAPIController::class, 'store'])->name('categories.store');
+            Route::match(['put', 'patch'], '/categories/{id}', [CategoryAPIController::class, 'update'])->whereNumber('id')->name('categories.update');
+            Route::delete('/categories/{id}', [CategoryAPIController::class, 'destroy'])->whereNumber('id')->name('categories.destroy');
+    });
+
+    /* **
+    Public routes
+    ** */
+    // Product endpoints
+    Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
+     Route::get('/products/{product:slug}', [ProductApiController::class, 'show'])->name('products.show');
+
+    // Category endpoint
+    Route::get('/categories', [CategoryAPIController::class, 'index'])->name('categories.index');
+    Route::get('/categories/{id}', [CategoryAPIController::class, 'show'])
+            ->whereNumber('id')->name('categories.show');
+    Route::get('/categories/tree', [CategoryAPIController::class, 'tree'])->name('categories.tree');
+
+
+
+    /* **
+    SPA routes
+    ** */
     Route::middleware('spa')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register');        
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login');
@@ -22,13 +59,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.forgot');
         Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1')->name('password.reset');
 
-        // Product endpoints
-        Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
-        Route::get('/products/{product:slug}', [ProductApiController::class, 'show'])->name('products.show');
 
-        // Category endpoint
-        Route::get('/categories', [CategoryApiController::class, 'index'])->name('categories.index');
-        Route::get('/categories/{category:slug}', [CategoryApiController::class, 'show'])->name('categories.show');
 
         Route::middleware('auth:sanctum')->group(function () {
             //Email verification feature
@@ -38,6 +69,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             Route::get('/me', [AuthController::class, 'me'])->name('me');
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        });
     });
-    });
+
 });

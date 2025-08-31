@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API\V1\APIAuth;
 
 use App\Models\User;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 
 class AuthController extends Controller
 {
@@ -53,7 +55,7 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Login successful', 'user' => $request->user()], 200);
     }
-
+    
     public function me(Request $request){
         return response()->json(['user' => $request->user()], 200);
     }

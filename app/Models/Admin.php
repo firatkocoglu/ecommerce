@@ -6,10 +6,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 
 class Admin extends Authenticatable implements MustVerifyEmail
 {
-    use HasRoles, HasFactory;
+    use HasRoles, HasFactory, HasApiTokens;
 
     protected $guard_name = 'admin';
 
@@ -23,6 +24,10 @@ class Admin extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verified_at',
+        'created_at',
+        'updated_at',
+        'is_super_admin'
     ];
 
     protected $casts = [
