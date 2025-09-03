@@ -9,6 +9,7 @@ use Tests\TestCase;
 use App\Models\Admin;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Str;
 
 class CategoryApiTest extends TestCase
 {
@@ -62,9 +63,6 @@ class CategoryApiTest extends TestCase
             'parent_id' => null
         ]);
 
-        dump('Response status:', $response->status());
-        dump('Response content:', $response->content());
-
         $response->assertCreated();
         $this->assertDatabaseHas('categories', [
              'name' => 'New Category',
@@ -93,5 +91,164 @@ class CategoryApiTest extends TestCase
         ]);
 
         $response->assertForbidden();
+    }
+
+    public function test_admin_can_update_category() {
+        $admin = Admin::factory()->create();
+        $admin->assignRole('admin');
+
+        $token = $admin->createToken('test-token', ['*'])->plainTextToken;
+
+        $category = Category::factory()->create([
+            'name' => 'Category',
+            'slug' => 'category',
+            'parent_id' => null
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token
+        ])
+        ->patchJson('/api/v1/categories/' . $category->id, [
+            'name' => 'Updated Category',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('categories', [
+            'name' => 'Updated Category',
+            'slug' => 'category',
+            'parent_id' => null,
+        ]);
+    }
+
+    public function test_store_rejects_duplicate_slug() {
+        $admin = Admin::factory()->create();
+        $admin->assignRole('admin');
+
+        $token = $admin->createToken('test-token', ['*'])->plainTextToken;
+
+        Category::factory()->create([
+            'name' => 'Unique Category',
+            'slug' => 'unique-category',
+            'parent_id' => null
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token
+        ])
+        ->postJson('/api/v1/categories', [
+            'name' => 'Another Category',
+            'slug' => 'unique-category',
+            'parent_id' => null
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseCount('categories', 1);
+    }
+
+    public function test_update_rejects_duplicate_slug() {
+        $admin = Admin::factory()->create();
+        $admin->assignRole('admin');
+
+        $token = $admin->createToken('test-token', ['*'])->plainTextToken;
+
+        $category  = Category::factory()->create([
+            'name' => 'Unique Category',
+            'slug' => 'unique-category',
+            'parent_id' => null
+        ]);
+
+        Category::factory()->create([
+            'name' => 'Another Category',
+            'slug' => 'another-category',
+            'parent_id' => null
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token
+        ])
+        ->patchJson('/api/v1/categories/' . $category->id, [  
+            'slug' => 'another-category',
+        ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['slug']);
+    }
+
+    public function test_admin_can_delete_category() {
+        $admin = Admin::factory()->create();
+        $admin->assignRole('admin');
+
+        $token = $admin->createToken('test-token', ['*'])->plainTextToken;
+
+        $category = Category::factory()->create([
+            'name' => 'Category',
+            'slug' => 'category',
+            'parent_id' => null
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token
+        ])
+        ->deleteJson('/api/v1/categories/' . $category->id);
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('categories', [
+            'id' => $category->id
+        ]);
+    }
+
+    public function test_delete_rejects_category_with_children() {
+        $admin = Admin::factory()->create();
+        $admin->assignRole('admin');
+
+        $token = $admin->createToken('test-token', ['*'])->plainTextToken;
+
+        $parentCategory = Category::factory()->create([
+            'name' => 'Parent Category',
+            'slug' => 'parent-category',
+            'parent_id' => null
+        ]);
+
+        Category::factory()->create([
+            'name' => 'Child Category',
+            'slug' => 'child-category',
+            'parent_id' => $parentCategory->id
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token
+        ])
+        ->deleteJson('/api/v1/categories/' . $parentCategory->id);
+
+        $response->assertUnprocessable();
+        $response->assertJsonPath('message', fn($m) => str_contains($m, 'Cannot delete'));
+        $this->assertDatabaseHas('categories', [
+            'id' => $parentCategory->id
+        ]);
+    }
+
+    public function test_throttle_limits_requests() {
+        $admin = Admin::factory()->create();
+        $admin->assignRole('admin');
+
+        $token = $admin->createToken('test-token', ['*'])->plainTextToken;
+
+        for ($i = 0; $i <= 20; $i++) {
+            $response = $this->withHeaders([
+                'Authorization' => 'Bearer ' . $token
+            ])
+            ->postJson('/api/v1/categories', [
+                'name' => Str::random(8),
+                'slug' => Str::lower(Str::random(8)),
+                'parent_id' => null
+            ]);
+
+            if($i < 20) {
+                $response->assertCreated();
+            } else {
+                $response->assertStatus(429);
+                $response->assertJsonPath('message', fn($m) => str_contains($m, 'Too Many'));
+            }
+        }
     }
  }

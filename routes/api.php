@@ -23,7 +23,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login');
     
-    Route::middleware(['auth:sanctum', 'role:admin,admin'])->group(function () {
+    Route::middleware(['auth:sanctum', 'role:admin,admin', 'throttle:20,1'])->group(function () {
             Route::get('/admin/me', [AdminAuth::class, 'me'])->name('admin.me');
             Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
             Route::post('/admin/logout-all', [AdminAuth::class, 'logoutAll'])->name('admin.logout.all');
@@ -71,5 +71,4 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         });
     });
-
 });
