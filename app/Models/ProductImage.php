@@ -10,10 +10,15 @@ class ProductImage extends Model
     use HasFactory;
     protected $fillable = [
         "url", 
-        "is_primary"
+        "is_primary",
+        "sort_order",
     ];
 
     public function product() {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productVariant() {
+        return $this->belongsTo(ProductVariant::class);
     }
 }
