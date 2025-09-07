@@ -19,7 +19,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed']
         ]);
-        
+
         try{
             $user = User::create([
                 'firstname' => $data['firstname'],
@@ -30,7 +30,7 @@ class AuthController extends Controller
         ]);
 
             $user->sendEmailVerificationNotification();
-            
+
             Auth::login($user);
             $request->session()->regenerate();
 
@@ -55,7 +55,7 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Login successful', 'user' => $request->user()], 200);
     }
-    
+
     public function me(Request $request){
         return response()->json(['user' => $request->user()], 200);
     }
