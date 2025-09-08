@@ -9,9 +9,14 @@ class ProductImage extends Model
 {
     use HasFactory;
     protected $fillable = [
-        "url", 
+        "url",
         "is_primary",
         "sort_order",
+    ];
+
+    protected $casts = [
+        'is_primary' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     public function product() {

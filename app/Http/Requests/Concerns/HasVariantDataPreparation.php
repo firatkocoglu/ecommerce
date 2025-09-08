@@ -8,8 +8,8 @@ trait HasVariantDataPreparation
     {
         $this->merge([
             'sku' => is_string($this->input('sku')) ? trim($this->input('sku')) : $this->input('sku'),
-            'weight' => (float) $this->input('weight'),
-            'price' => (int) round((float) $this->input('price') * 100),
+            'weight' => $this->filled('weight') ? (float) $this->input('weight') : null,
+            'price' => $this->filled('price') ? (float) $this->input('price') : null,
         ]);
     }
 }

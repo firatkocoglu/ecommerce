@@ -10,10 +10,10 @@ class ProductVariant extends Model
     use HasFactory;
 
     protected $fillable = [
-        "color", 
-        "size", 
-        "price", 
-        "weight", 
+        "color",
+        "size",
+        "price",
+        "weight",
     ];
 
     public function product() {
