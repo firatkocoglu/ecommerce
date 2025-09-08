@@ -11,7 +11,7 @@ use App\Http\Requests\Concerns\HasProductDataPreparation;
 
 class UpdateProductRequest extends FormRequest
 {
-    use HasProductMessages, HasImageAfterHooks;
+    use HasProductMessages, HasImageAfterHooks, HasProductDataPreparation;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,7 +27,7 @@ class UpdateProductRequest extends FormRequest
      */
 
     protected function prepareForValidation(): void {
-        $this->prepareForValidation();
+        $this->prepareProductData();
     }
 
     public function rules(): array
