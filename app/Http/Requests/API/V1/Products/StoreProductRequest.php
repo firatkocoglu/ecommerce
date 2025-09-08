@@ -4,9 +4,13 @@ namespace App\Http\Requests\API\V1\Products;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Concerns\HasProductMessages;
+use App\Http\Requests\Concerns\HasImageAfterHooks;
+use App\Http\Requests\Concerns\HasProductDataPreparation;
 
 class StoreProductRequest extends FormRequest
 {
+    use HasProductMessages, HasImageAfterHooks, HasProductDataPreparation;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -23,13 +27,7 @@ class StoreProductRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'name' => is_string($this->input('name')) ? trim($this->input('name')) : $this->input('name'),
-            'slug' => is_string($this->input('slug')) ? trim($this->input('slug')) : $this->input('slug'),
-            'status' => is_string($this->input('status')) ? strtolower(trim($this->input('status'))) : $this->input('status'),
-            'visibility' => is_string($this->input('visibility')) ? strtolower(trim($this->input('visibility'))) : $this->input('visibility'),
-            'currency' => is_string($this->input('currency')) ? strtoupper(trim($this->input('currency'))) : $this->input('currency'),
-        ]);
+        $this->prepareProductData();
     }
 
     public function rules(): array
@@ -60,53 +58,12 @@ class StoreProductRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void {
+        $this->applySinglePrimaryImageRule($validator);
+    }
+
     public function messages(): array {
-        return [
-            'name.required' => 'The product name is required.',
-            'name.string' => 'The product name must be a string.',
-            'name.max' => 'The product name may not be greater than 255 characters.',
-
-            'slug.string' => 'The product slug must be a string.',
-            'slug.max' => 'The product slug may not be greater than 255 characters.',
-            'slug.unique' => 'The product slug has already been taken.',
-
-            'description.string' => 'The product description must be a string.',
-
-            'price.required' => 'The product price is required.',
-            'price.numeric' => 'The product price must be a number.',
-            'price.min' => 'The product price must be at least 0.',
-
-            'currency.string' => 'The currency must be a string.',
-            'currency.size' => 'The currency must be a valid 3-letter ISO code. e.g. USD, EUR, GBP, TRY.',
-
-            'status.in' => 'The status must be one of the following: draft, active, archived.',
-            'visibility.in' => 'The visibility must be one of the following: public, private.',
-
-            'category_id.required' => 'The category ID is required.',
-            'category_id.integer' => 'The category ID must be an integer.',
-            'category_id.exists' => 'The selected category does not exist.',
-
-            'attributes.array' => 'The attributes must be an array.',
-
-            'images.array' => 'The images must be an array.',
-            'images.*.url.required_with' => 'Each image must have a URL when images are provided.',
-            'images.*.url.string' => 'Each image URL must be a string.',
-            'images.*.url.max' => 'Each image URL may not be greater than 2048 characters.',
-            'images.*.is_primary.boolean' => 'The is_primary field must be true or false.',
-            'images.*.sort_order.integer' => 'The sort_order field must be an integer.',
-            'images.*.sort_order.min' => 'The sort_order field must be at least 0.',
-        ];
+        return $this->productMessages();
     }
 
-    public function after(): array {
-        return [
-            // Only one primary image can exist
-            function ($validator) {
-                $images = collect($this->input('images', []));
-                if ($images->where('is_primary', true)->count() > 1) {
-                    $validator->errors()->add('images', 'Only one primary image is allowed.');
-                }
-            }
-        ];
-    }
 }

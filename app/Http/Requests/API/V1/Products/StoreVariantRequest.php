@@ -4,9 +4,12 @@ namespace App\Http\Requests\API\V1\Products;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Concerns\HasVariantMessages;
+use App\Http\Requests\Concerns\HasImageAfterHooks;
 
 class StoreVariantRequest extends FormRequest
 {
+    use HasVariantMessages, HasImageAfterHooks;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -43,37 +46,13 @@ class StoreVariantRequest extends FormRequest
         ];
     }
 
-    public function after(): array {
-        return [
-            function ($validator) {
-                $primaryCount = collect($this->input('images', []))
-                    ->where('is_primary', true)
-                    ->count();
-                if ($primaryCount >  1) {
-                    $validator->errors()->add('images', 'Only one image can be marked as primary.');
-                }
-            }
-        ];
+    public function withValidator($validator): void
+    {
+        $this->applySinglePrimaryImageRule($validator);
     }
 
     public function messages(): array
     {
-        return [
-            'sku.required' => 'SKU is required.',
-            'sku.unique'   => 'This SKU is already in use.',
-            'price.required' => 'Variant price is required.',
-            'price.numeric'  => 'Variant price must be numeric.',
-            'weight.numeric' => 'Variant weight must be numeric.',
-            'options.array' => 'Variant options must be array.',
-
-            // Images
-            'images.array' => 'The images must be an array.',
-            'images.*.url.required_with' => 'Each image must have a URL when images are provided.',
-            'images.*.url.string' => 'Each image URL must be a string.',
-            'images.*.url.max' => 'Each image URL may not be greater than 2048 characters.',
-            'images.*.is_primary.boolean' => 'The is_primary field must be true or false.',
-            'images.*.sort_order.integer' => 'The sort_order field must be an integer.',
-            'images.*.sort_order.min' => 'The sort_order field must be at least 0.',
-        ];
+        return $this->variantMessages();
     }
 }

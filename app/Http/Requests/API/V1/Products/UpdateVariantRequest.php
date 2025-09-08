@@ -4,9 +4,14 @@ namespace App\Http\Requests\API\V1\Products;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Concerns\HasVariantMessages;
+use App\Http\Requests\Concerns\HasImageAfterHooks;
+
 
 class UpdateVariantRequest extends FormRequest
 {
+    use HasVariantMessages, HasImageAfterHooks;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -35,23 +40,24 @@ class UpdateVariantRequest extends FormRequest
             'price' => ['sometimes', 'required', 'numeric', 'min:0', 'decimal:0,2'],
             'weight' => ['sometimes', 'nullable', 'numeric', 'min:0', 'decimal:0,2'],
             'options' => ['sometimes', 'nullable', 'array'],
+
+            // Images
+            'images' => ['sometimes', 'nullable', 'array'],
+            'images.*.url' => ['sometimes', 'nullable', 'string', 'max:2048', 'url'],
+            'images.*.is_primary' => ['sometimes', 'nullable', 'boolean'],
+            'images.*.sort_order' => ['sometimes', 'nullable', 'integer', 'min:0'],
         ];
     }
 
+    public function withValidator($validator): void {
+        $this->applySinglePrimaryImageRule($validator);
+    }
 
     /**
      * Custom validation messages.
      */
     public function messages(): array
     {
-        return [
-            'sku.required'   => 'SKU is required when provided.',
-            'sku.unique'     => 'This SKU is already taken.',
-            'price.required' => 'Variant price is required when provided.',
-            'price.numeric'  => 'Variant price must be numeric.',
-            'price.min'      => 'Variant price must be at least 0.',
-            'weight.numeric' => 'Weight must be numeric.',
-            'weight.min'     => 'Weight must be at least 0.',
-        ];
+        return $this->variantMessages();
     }
 }
