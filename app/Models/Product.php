@@ -9,10 +9,10 @@ class Product extends Model
 {
     use HasFactory;
     protected $fillable = [
-        "name", 
-        "slug", 
-        "description", 
-        "price", 
+        "name",
+        "slug",
+        "description",
+        "price",
         "weight",
         "status",
     ];
@@ -26,7 +26,7 @@ class Product extends Model
     }
 
     public function primaryImage() {
-        return $this->hasOne(ProductImage::class, 'product_id')->whereNull('product_variant_id')->where('is_primary', true)->orderBy('sort_order');
+        return $this->hasOne(ProductImage::class, 'product_id')->whereNull('product_variant_id')->where('is_primary', true);
     }
 
 
@@ -74,15 +74,15 @@ class Product extends Model
         // Fallback to product images
         if ($this->relationLoaded('images')) {
             return $this->images->sortBy('sort_order');
-        } 
+        }
 
         return $this->images()->orderBy('sort_order')->get();
-        
+
     }
 
     public function variants() {
         return $this->hasMany(ProductVariant::class, 'product_id');
-    } 
+    }
 
     public function reviews() {
         return $this->hasMany(Review::class);

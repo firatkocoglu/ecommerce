@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Prevent lazy loading globally
+        Model::preventLazyLoading();
+
+        // Report lazy loading violations differently based on environment
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation){
+            $exception = new LazyLoadingViolationException($model, $relation);
+
+            if($this->app->isProduction()){
+                report($exception);
+                return null;
+            } else {
+                throw $exception;
+            }
+        });
+
+        // Prevent setting wrong attributes globally
+        Model::preventSilentlyDiscardingAttributes();
+
+        // Prevent accessing missing attributes globally;
+        Model::preventAccessingMissingAttributes();
     }
 }
