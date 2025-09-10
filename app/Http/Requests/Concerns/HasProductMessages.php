@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Requests\Concerns;
-use App\Http\Requests\Concerns\HasImageMessages;
 
 trait HasProductMessages
 {

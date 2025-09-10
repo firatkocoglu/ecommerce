@@ -42,6 +42,8 @@ class ProductService
     public function findById(int $id, $onlyActive = true, $cacheActive = true): Product
     {
         // Implementation for finding a product by its ID
+
+        // Define key for naming cache
         $key = "products:show:id:{$id}:active:{$onlyActive}";
 
         // Base query
@@ -82,5 +84,46 @@ class ProductService
         });
     }
 
-    // Product related business logic will go here
+    /**
+     * @throws Throwable
+     */
+    public function update(int $id, array $data): Product
+    {
+        // Implementation for updating an existing product
+        return DB::transaction(function () use ($id, $data) {
+            $product = Product::query()->lockForUpdate()->findOrFail($id);
+
+        // Don't write the changes to db immediately
+            $product->fill($data);
+
+        // Any changes made?
+            if (! $product->isDirty()) {
+                return $product;
+            }
+
+            $product->save();
+
+            DB::afterCommit(function () {
+                Cache::tags(['products'])->flush();
+            });
+
+            return $product->refresh();
+        });
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function delete(int $id): void
+    {
+        DB::transaction(function () use ($id) {
+            $product = Product::query()->lockForUpdate()->findOrFail($id);
+
+            $product->delete();
+
+            DB::afterCommit(function () {
+                Cache::tags(['products'])->flush();
+            });
+        });
+    }
 }
