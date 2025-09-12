@@ -11,7 +11,7 @@ use Throwable;
 
 class ProductService
 {
-    public function listPaginated(int $perPage = 20, bool  $onlyActive = true, bool $cacheActive = true): LengthAwarePaginator
+    public function listPaginated(int $perPage, bool  $onlyActive = true, bool $cacheActive = true): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, 100));
         $currentPage = Paginator::resolveCurrentPage() ?: 1;
@@ -93,10 +93,10 @@ class ProductService
         return DB::transaction(function () use ($id, $data) {
             $product = Product::query()->lockForUpdate()->findOrFail($id);
 
-        // Don't write the changes to db immediately
+            // Don't write the changes to db immediately
             $product->fill($data);
 
-        // Any changes made?
+            // Any changes made?
             if (! $product->isDirty()) {
                 return $product;
             }

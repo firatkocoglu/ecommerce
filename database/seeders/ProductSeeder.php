@@ -12,14 +12,10 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = \App\Models\Category::factory()->count(5)->create();
+//        $categories = \App\Models\Category::factory()->count(5)->create();
 
         \App\Models\Product::factory()
             ->count(50)
-            ->make()
-            ->each(function ($product) use ($categories) {
-                $product->category_id = $categories->random()->id;
-                $product->save();
-            });
+            ->create();
     }
 }

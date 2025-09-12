@@ -22,7 +22,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     ** */
 
     Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login');
-    
+
     Route::middleware(['auth:sanctum', 'role:admin,admin', 'throttle:20,1'])->group(function () {
             Route::get('/admin/me', [AdminAuth::class, 'me'])->name('admin.me');
             Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
@@ -38,7 +38,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     ** */
     // Product endpoints
     Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
-     Route::get('/products/{product:slug}', [ProductApiController::class, 'show'])->name('products.show');
+     Route::get('/products/{id}', [ProductApiController::class, 'show'])->name('products.show');
 
     // Category endpoint
     Route::get('/categories', [CategoryAPIController::class, 'index'])->name('categories.index');
@@ -52,7 +52,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     SPA routes
     ** */
     Route::middleware('spa')->group(function () {
-        Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register');        
+        Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register');
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login');
 
         //Reset password feature
