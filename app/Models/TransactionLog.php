@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionTypes;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class TransactionLog extends Model
 {
@@ -38,7 +38,7 @@ class TransactionLog extends Model
     ];
 
     protected $touches = [
-        'order'
+        'order',
     ];
 
     public function user()
@@ -63,6 +63,6 @@ class TransactionLog extends Model
 
     public function getFormattedAmountAttribute()
     {
-        return number_format((float)$this->amount, 2, ',', '.'). ' ₺';
+        return number_format((float) $this->amount, 2, ',', '.').' ₺';
     }
 }

@@ -3,14 +3,15 @@
 namespace App\Http\Requests\API\V1\Variants;
 
 use App\Http\Requests\Concerns\HasImageAfterHooks;
-use App\Http\Requests\Concerns\HasVariantMessages;
 use App\Http\Requests\Concerns\HasVariantDataPreparation;
+use App\Http\Requests\Concerns\HasVariantMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreVariantRequest extends FormRequest
 {
-    use HasVariantMessages, HasImageAfterHooks, HasVariantDataPreparation;
+    use HasImageAfterHooks, HasVariantDataPreparation, HasVariantMessages;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -24,8 +25,8 @@ class StoreVariantRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
-    protected function prepareForValidation(): void {
+    protected function prepareForValidation(): void
+    {
         $this->prepareVariantData();
     }
 
@@ -33,7 +34,7 @@ class StoreVariantRequest extends FormRequest
     {
         return [
             'sku' => ['required', 'string', 'max:100', Rule::unique('product_variants', 'sku')],
-            'price' => ['required', 'numeric', 'decimal:0,2', 'min:0', ],
+            'price' => ['required', 'numeric', 'decimal:0,2', 'min:0'],
             'weight' => ['nullable', 'numeric', 'min:0', 'decimal:0,2'],
             'options' => ['nullable', 'array'],
 

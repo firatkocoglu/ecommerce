@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class CartItem extends Model
 {
@@ -13,15 +13,18 @@ class CartItem extends Model
         'quantity',
     ];
 
-    public function cart() {
+    public function cart()
+    {
         return $this->belongsTo(Cart::class);
     }
 
-    public function product() {
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 
-    public function productVariant() {
+    public function productVariant()
+    {
         return $this->belongsTo(ProductVariant::class);
     }
 }

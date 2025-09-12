@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Concerns;
 
 use Illuminate\Validation\Validator;
-use Illuminate\Support\Collection;
 
 trait HasImageAfterHooks
 {

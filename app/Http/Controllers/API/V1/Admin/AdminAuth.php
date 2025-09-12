@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\API\V1\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Admin;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AdminAuth extends Controller
-{  
-    
-    public function login(Request $request){
+{
+    public function login(Request $request)
+    {
         // We use tokens for admin login
         $data = $request->validate([
-            'email'     => ['required', 'email'],
-            'password'  => ['required', 'string']
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
         $admin = Admin::where('email', $data['email'])->first();
@@ -28,28 +28,34 @@ class AdminAuth extends Controller
 
         return response()->json([
             'message' => 'Login successful',
-            'token'   => $token,
-            'admin'   => [
-                'id'    => $admin->id,
-                'name'  => $admin->name,
+            'token' => $token,
+            'admin' => [
+                'id' => $admin->id,
+                'name' => $admin->name,
                 'email' => $admin->email,
             ],
         ], 200);
     }
 
-    public function me(Request $request) {
+    public function me(Request $request)
+    {
         $admin = $request->user();
+
         return response()->json(['admin' => $admin], 200);
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         $admin = $request->user();
         $admin->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Logout successful'], 200);
     }
 
-    public function logoutAll(Request $request) {
+    public function logoutAll(Request $request)
+    {
         $request->user()->tokens()->delete();
+
         return response()->json(['message' => 'All tokens revoked'], 200);
     }
- }
+}

@@ -15,14 +15,16 @@ class Category extends Model
         'parent_id',
     ];
 
-    public function parent() {
+    public function parent()
+    {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    public function children() {
+    public function children()
+    {
         return $this->hasMany(Category::class, 'parent_id');
     }
-    
+
     public function products()
     {
         // Many-to-many: a category can have many products and a product can belong to many categories

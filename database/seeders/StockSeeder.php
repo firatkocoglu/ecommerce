@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Stock;
 use App\Models\ProductVariant;
+use App\Models\Stock;
 use Illuminate\Database\Seeder;
 
 class StockSeeder extends Seeder
@@ -13,14 +13,14 @@ class StockSeeder extends Seeder
      */
     public function run(): void
     {
-        
+
         ProductVariant::chunk(100, function ($variants) {
             $rows = [];
 
-            foreach($variants as $variant) {
+            foreach ($variants as $variant) {
                 $rows[] = [
                     'product_variant_id' => $variant->id,
-                    'quantity' => fake()->numberBetween(0,100),
+                    'quantity' => fake()->numberBetween(0, 100),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

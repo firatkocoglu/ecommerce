@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
     use HasFactory;
 
-    protected $fillable= [
+    protected $fillable = [
         'session_id',
-        'expires_at'
+        'expires_at',
     ];
 
     protected $casts = [
@@ -28,7 +28,8 @@ class Cart extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function mergedIntoCart() {
+    public function mergedIntoCart()
+    {
         return $this->belongsTo(Cart::class, 'merged_into_cart_id');
     }
 }

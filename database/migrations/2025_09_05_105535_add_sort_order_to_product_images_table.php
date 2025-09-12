@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('product_images', function (Blueprint $table) {
             $table->integer('sort_order')->default(0)->after('product_variant_id');
-            
+
             $table->index(['product_id', 'sort_order'], 'product_images_product_id_sort_order_index');
         });
     }

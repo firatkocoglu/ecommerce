@@ -3,15 +3,15 @@
 namespace App\Http\Requests\API\V1\Variants;
 
 use App\Http\Requests\Concerns\HasImageAfterHooks;
-use App\Http\Requests\Concerns\HasVariantMessages;
 use App\Http\Requests\Concerns\HasVariantDataPreparation;
+use App\Http\Requests\Concerns\HasVariantMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-
 class UpdateVariantRequest extends FormRequest
 {
-    use HasVariantMessages, HasImageAfterHooks, HasVariantDataPreparation;
+    use HasImageAfterHooks, HasVariantDataPreparation, HasVariantMessages;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -20,8 +20,9 @@ class UpdateVariantRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation(): void {
-       $this->prepareVariantData();
+    protected function prepareForValidation(): void
+    {
+        $this->prepareVariantData();
     }
 
     /**
@@ -47,7 +48,8 @@ class UpdateVariantRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator): void {
+    public function withValidator($validator): void
+    {
         $this->applySinglePrimaryImageRule($validator);
     }
 

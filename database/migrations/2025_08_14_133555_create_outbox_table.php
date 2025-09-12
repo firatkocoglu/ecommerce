@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -28,13 +28,13 @@ return new class extends Migration
             $table->timestamp('next_attempt_at')->nullable();
 
             $table->index(['aggregate_type', 'aggregate_id']);
-            $table->index(['dispatched_at', 'occurred_at', ]);
+            $table->index(['dispatched_at', 'occurred_at']);
             $table->index('event_type');
             $table->index('next_attempt_at');
-            
+
         });
 
-        DB::statement("CREATE INDEX outbox_pending_idx ON outbox (occurred_at) WHERE dispatched_at IS NULL");
+        DB::statement('CREATE INDEX outbox_pending_idx ON outbox (occurred_at) WHERE dispatched_at IS NULL');
     }
 
     /**

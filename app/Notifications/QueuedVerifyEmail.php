@@ -35,9 +35,9 @@ class QueuedVerifyEmail extends Notification implements ShouldQueue
      * Get the mail representation of the notification.
      */
     public function toMail(object $notifiable): MailMessage
-    {   
+    {
         $verifyUrl = $this->verificationUrl($notifiable);
-        
+
         return (new MailMessage)
             ->subject('E-Commerce App | Verify your email')
             ->greeting('Welcome to E-Commerce App!')
@@ -46,20 +46,21 @@ class QueuedVerifyEmail extends Notification implements ShouldQueue
             ->line('If you did not create an account, no further action is required.');
     }
 
-    protected function verificationUrl($notifiable): string {
+    protected function verificationUrl($notifiable): string
+    {
         // Create the standard signed backend URL to the verify route
         $backendSignedUrl = URL::temporarySignedRoute(
             'api.v1.verification.verify',
             Carbon::now()->addMinutes(60),
-            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification()), 'redirect' => config('app.frontend_url') . '/verify-success',
-        ]
+            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification()), 'redirect' => config('app.frontend_url').'/verify-success',
+            ]
         );
 
         // FRONTEND_URL=/ (e.g. http://localhost:5173)
         $frontend = rtrim(config('app.frontend_url', ''), '/');
         if ($frontend) {
             // e.g. http://localhost:5173/verify-email?url=<encodedSignedUrl>
-            return $frontend . '/verify-email?url=' . urlencode($backendSignedUrl);
+            return $frontend.'/verify-email?url='.urlencode($backendSignedUrl);
         }
 
         // Fallback: send the backend URL directly

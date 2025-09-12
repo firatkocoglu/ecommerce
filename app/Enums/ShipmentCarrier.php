@@ -10,7 +10,8 @@ enum ShipmentCarrier: string
     case PTT = 'ptt';
     case Surat = 'surat';
 
-    public function label(): string{
+    public function label(): string
+    {
         return match ($this) {
             self::Aras => 'Aras Kargo',
             self::MNG => 'MNG Kargo',

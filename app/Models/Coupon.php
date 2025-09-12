@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Enums\CouponType;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Coupon extends Model
 {
@@ -32,19 +32,23 @@ class Coupon extends Model
         'formatted_value',
     ];
 
-    public function productVariant() {
+    public function productVariant()
+    {
         return $this->belongsTo(ProductVariant::class);
     }
 
-    public function isExpired(): bool {
+    public function isExpired(): bool
+    {
         return $this->expires_at && now()->greaterThan($this->expires_at);
     }
 
-    public function isAvailable(): bool {
-        return $this->is_active && !$this->isExpired() && ($this->usage_limit === null || $this->used_count < $this->usage_limit);
+    public function isAvailable(): bool
+    {
+        return $this->is_active && ! $this->isExpired() && ($this->usage_limit === null || $this->used_count < $this->usage_limit);
     }
 
-    public function getFormattedValueAttribute(): string {
-        return $this->type === CouponType::Percentage ? number_format($this->value, 2) . '%' : number_format($this->value, 2) . ' ₺';
+    public function getFormattedValueAttribute(): string
+    {
+        return $this->type === CouponType::Percentage ? number_format($this->value, 2).'%' : number_format($this->value, 2).' ₺';
     }
 }

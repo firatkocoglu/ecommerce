@@ -21,7 +21,8 @@ class ReturnRequest extends Model
         'status' => ReturnRequestStatus::class,
     ];
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 

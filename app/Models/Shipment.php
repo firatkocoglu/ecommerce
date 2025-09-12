@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Enums\ShipmentCarrier;
 use App\Enums\ShipmentStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Shipment extends Model
 {

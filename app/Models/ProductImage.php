@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class ProductImage extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        "url",
-        "is_primary",
-        "sort_order",
+        'url',
+        'is_primary',
+        'sort_order',
     ];
 
     protected $casts = [
@@ -19,11 +20,13 @@ class ProductImage extends Model
         'sort_order' => 'integer',
     ];
 
-    public function product() {
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 
-    public function productVariant() {
+    public function productVariant()
+    {
         return $this->belongsTo(ProductVariant::class);
     }
 }

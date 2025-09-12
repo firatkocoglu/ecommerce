@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable implements MustVerifyEmail
 {
-    use HasRoles, HasFactory, HasApiTokens;
+    use HasApiTokens, HasFactory, HasRoles;
 
     protected $guard_name = 'admin';
 
@@ -27,7 +27,7 @@ class Admin extends Authenticatable implements MustVerifyEmail
         'email_verified_at',
         'created_at',
         'updated_at',
-        'is_super_admin'
+        'is_super_admin',
     ];
 
     protected $casts = [

@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\API\V1\APIAuth;
 
-use App\Models\User;
-
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 
 class AuthController extends Controller
 {
@@ -17,17 +15,17 @@ class AuthController extends Controller
             'firstname' => ['required', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed']
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        try{
+        try {
             $user = User::create([
                 'firstname' => $data['firstname'],
                 'lastname' => $data['lastname'],
                 'email' => $data['email'],
                 'password' => $data['password'],
                 'role' => 'customer',
-        ]);
+            ]);
 
             $user->sendEmailVerificationNotification();
 
@@ -35,7 +33,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             return response()->json(['message' => 'Registration successful', 'user' => $user], 201);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['message' => 'User creation failed', 'error' => app()->environment('local') ? $e->getMessage() : null], 500);
         }
     }
@@ -44,7 +42,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'string']
+            'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($data, true)) {
@@ -56,11 +54,13 @@ class AuthController extends Controller
         return response()->json(['message' => 'Login successful', 'user' => $request->user()], 200);
     }
 
-    public function me(Request $request){
+    public function me(Request $request)
+    {
         return response()->json(['user' => $request->user()], 200);
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

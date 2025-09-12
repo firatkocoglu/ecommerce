@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->decimal('amount', 10, 2);
             $table->text('notes')->nullable();
-            $table->timestamp('logged_at')->useCurrent();            
+            $table->timestamp('logged_at')->useCurrent();
             $table->timestamps();
         });
     }

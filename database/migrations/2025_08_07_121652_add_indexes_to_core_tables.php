@@ -82,7 +82,7 @@ return new class extends Migration
             $table->dropIndex('carts_merged_into_cart_id_index');
         });
 
-         Schema::table('cart_items', function (Blueprint $table) {
+        Schema::table('cart_items', function (Blueprint $table) {
             $table->dropIndex('cart_items_cart_id_index');
             $table->dropIndex('cart_items_product_variant_id_index');
         });

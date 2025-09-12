@@ -6,7 +6,8 @@ trait HasProductMessages
 {
     use HasImageMessages;
 
-    public function productMessages(): array {
+    public function productMessages(): array
+    {
         return array_merge([
             'name.required' => 'The product name is required.',
             'name.string' => 'The product name must be a string.',

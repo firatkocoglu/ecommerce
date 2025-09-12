@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Enums\OutboxAggregateType;
 use App\Enums\OutboxEventType;
-use InvalidArgumentException;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class Outbox extends Model
 {
     protected $table = 'outbox';
 
     protected $keyType = 'string';
-    public $incrementing = false;
 
+    public $incrementing = false;
 
     protected $fillable = [
         'aggregate_type',
@@ -35,21 +35,20 @@ class Outbox extends Model
         'next_attempt_at' => 'datetime',
     ];
 
-
-    
-    // Validate event type belongs to the correct aggregate type 
+    // Validate event type belongs to the correct aggregate type
     // Event types and aggregate types are already linked in the enums
-    protected static function booted(){
+    protected static function booted()
+    {
         static::creating(function (Outbox $model) {
-            if(empty($model->occurred_at)) {
+            if (empty($model->occurred_at)) {
                 $model->occurred_at = now();
             }
 
-           $model->assertEventMatchesAggregate();
+            $model->assertEventMatchesAggregate();
 
-           if(empty($model->getKey())){
-              $model->{$model->getKeyName()} = (string) Str::uuid();
-           };
+            if (empty($model->getKey())) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
         });
 
         static::updating(function (Outbox $model) {
@@ -63,7 +62,7 @@ class Outbox extends Model
     }
 
     protected function assertEventMatchesAggregate()
-    {   
+    {
 
         // If either aggregate type or event type is missing, skip
         if (! $this->aggregate_type || ! $this->event_type) {
@@ -74,7 +73,7 @@ class Outbox extends Model
         $allowed = $this->aggregate_type->allowedEventTypes();
 
         // Check if the event type is allowed for the aggregate type
-        if(!in_array($this->event_type, $allowed, true)) {
+        if (! in_array($this->event_type, $allowed, true)) {
             throw new InvalidArgumentException(
                 "Event type {$this->event_type->value} is not allowed for aggregate type {$this->aggregate_type->value}"
             );
@@ -88,17 +87,19 @@ class Outbox extends Model
         return $query->whereNull('dispatched_at');
     }
 
-    public function scopeDue($query){
+    public function scopeDue($query)
+    {
         return $query->where(function ($q) {
             $q->whereNull('next_attempt_at')
-            ->orWhere('next_attempt_at', '<=', now());
+                ->orWhere('next_attempt_at', '<=', now());
         });
     }
 
-    public function scopeReservable($query, int $graceSeconds = 60) {
+    public function scopeReservable($query, int $graceSeconds = 60)
+    {
         return $query->where(function ($q) use ($graceSeconds) {
             $q->whereNull('reserved_at')
-            ->orWhere('reserved_at', '<', now()->subSeconds($graceSeconds));
+                ->orWhere('reserved_at', '<', now()->subSeconds($graceSeconds));
         });
     }
 
@@ -123,14 +124,16 @@ class Outbox extends Model
         $this->save();
     }
 
-    public function markDispatched(){
+    public function markDispatched()
+    {
         $this->dispatched_at = now();
         $this->reserved_at = null; // Clear reservation
         $this->reserved_by = null; // Clear worker ID
         $this->save();
     }
 
-    public function failWithBackoff(string $errorMessage, int $baseSeconds = 60, int $maxSeconds = 3600){
+    public function failWithBackoff(string $errorMessage, int $baseSeconds = 60, int $maxSeconds = 3600)
+    {
         $this->attempts = ($this->attempts ?? 0) + 1;
         $delay = min($maxSeconds, $baseSeconds * (2 ** max(0, $this->attempts - 1)));
         $this->next_attempt_at = now()->addSeconds($delay);

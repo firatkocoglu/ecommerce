@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class WishlistItem extends Model
 {
@@ -20,15 +20,16 @@ class WishlistItem extends Model
         'priority' => 'integer',
     ];
 
-    protected static function booted() {
+    protected static function booted()
+    {
         static::addGlobalScope('ordered', function ($query) {
             $query->orderBy(
                 'priority',
                 'asc'
             )->orderBy(
                 'added_at',
-                'desc')
-            ;});
+                'desc');
+        });
     }
 
     public function wishlist()

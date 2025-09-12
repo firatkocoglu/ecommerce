@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum OutboxEventType: string
 {
-// -------------------
+    // -------------------
     // User domain events
     // -------------------
     case EMAIL_VERIFICATION = 'email_verification';
@@ -25,4 +25,3 @@ enum OutboxEventType: string
     // -------------------
     case PRODUCT_REVIEW = 'product_review';
 }
-

@@ -22,8 +22,9 @@ return new class extends Migration
             $table->string('state')->nullable();
             $table->string('country');
             $table->string('postal_code')->nullable();
-    });
-}
+        });
+    }
+
     public function down(): void
     {
         Schema::dropIfExists('addresses');

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class DiscountLog extends Model
 {
@@ -11,7 +11,7 @@ class DiscountLog extends Model
 
     protected $fillable = [
         'discount_amount',
-        'applied_at',  
+        'applied_at',
     ];
 
     protected $casts = [
@@ -36,14 +36,13 @@ class DiscountLog extends Model
         return $this->belongsTo(Coupon::class);
     }
 
-
     public function getFormattedDiscountAttribute()
     {
-        return number_format((float) $this->discount_amount, 2, ',', '.') . ' ₺';
+        return number_format((float) $this->discount_amount, 2, ',', '.').' ₺';
     }
 
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
-    }  
+    }
 }

@@ -12,7 +12,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -49,8 +49,8 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function sendEmailVerificationNotification(){
-        $this->notify(new QueuedVerifyEmail());
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new QueuedVerifyEmail);
     }
-
 }

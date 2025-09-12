@@ -4,14 +4,14 @@ namespace App\Services\Products;
 
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class ProductService
 {
-    public function listPaginated(int $perPage, bool  $onlyActive = true, bool $cacheActive = true): LengthAwarePaginator
+    public function listPaginated(int $perPage, bool $onlyActive = true, bool $cacheActive = true): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, 100));
         $currentPage = Paginator::resolveCurrentPage() ?: 1;
@@ -22,16 +22,15 @@ class ProductService
         $query = Product::query();
 
         // Filter only active products if required
-        $query = $onlyActive ?  $query->where('status', 'active') : $query;
+        $query = $onlyActive ? $query->where('status', 'active') : $query;
 
         // Eager load relationships and counts
         $query = $query->with(['categories:id,name,slug',
-                'images',
-                'variants.images',
-                'primaryImage',
-                'coverImage'])
+            'images',
+            'variants.images',
+            'primaryImage',
+            'coverImage'])
             ->withCount(['variants', 'images']);
-
 
         // Cache the result if caching is enabled
         return $cacheActive ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), function () use ($query, $perPage) {
@@ -50,14 +49,14 @@ class ProductService
         $query = Product::query();
 
         // Filter only active products if required
-        $query = $onlyActive ?  $query->where('status', 'active') : $query;
+        $query = $onlyActive ? $query->where('status', 'active') : $query;
 
         // Eager load relationships and counts
         $query = $query->with(['categories:id,name,slug',
-                        'images' => fn ($q) => $q->orderByDesc('is_primary'),
-                        'variants.images' => fn ($q) => $q->orderByDesc('is_primary'),
-                        'primaryImage',
-                        'coverImage'])
+            'images' => fn ($q) => $q->orderByDesc('is_primary'),
+            'variants.images' => fn ($q) => $q->orderByDesc('is_primary'),
+            'primaryImage',
+            'coverImage'])
             ->withCount(['variants', 'images']);
 
         // Cache the result if caching is enabled
@@ -80,6 +79,7 @@ class ProductService
                 // Flush existing cache
                 Cache::tags(['products'])->flush();
             });
+
             return $product;
         });
     }

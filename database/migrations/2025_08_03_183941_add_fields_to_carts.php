@@ -24,8 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('carts', function (Blueprint $table) {
-                 $table->dropForeign(['merged_into_cart_id']);
-                 $table->dropColumn(['session_id', 'expires_at', 'merged_into_cart_id']);
+            $table->dropForeign(['merged_into_cart_id']);
+            $table->dropColumn(['session_id', 'expires_at', 'merged_into_cart_id']);
         });
     }
 };

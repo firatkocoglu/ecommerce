@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\API\V1\APIAuth;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Password;
+use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class PasswordResetController extends Controller
 {
     public function sendResetLink(Request $request)
     {
         $request->validate([
-            'email' => ['required', 'email', 'max:255']
+            'email' => ['required', 'email', 'max:255'],
         ]);
 
         $status = Password::broker('users')->sendResetLink(
@@ -35,7 +35,7 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
-        
+
         $status = Password::broker('users')->reset(
             $data,
             function (User $user, string $password) {
@@ -47,7 +47,7 @@ class PasswordResetController extends Controller
                 event(new PasswordReset($user));
             }
         );
-        
+
         if ($status === Password::PASSWORD_RESET) {
             return response()->json(['status' => 'success', 'message' => __('passwords.reset')], 200);
         }

@@ -11,11 +11,11 @@ enum OutboxAggregateType: string
     case CART = 'cart';
     case PAYMENT = 'payment';
 
-
     // Get allowed event types for the aggregate
     // Avoid e.g. ORDER -> PASSWORD_RESET
-    public function allowedEventTypes(): array {
-        return match($this) {
+    public function allowedEventTypes(): array
+    {
+        return match ($this) {
             self::USER => [
                 OutboxEventType::EMAIL_VERIFICATION,
                 OutboxEventType::USER_REGISTRATION,
@@ -34,5 +34,4 @@ enum OutboxAggregateType: string
             default => [],
         };
     }
-
 }

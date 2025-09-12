@@ -2,44 +2,49 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        "name",
-        "slug",
-        "description",
-        "price",
-        "weight",
-        "status",
+        'name',
+        'slug',
+        'description',
+        'price',
+        'weight',
+        'status',
     ];
 
-    public function categories() {
+    public function categories()
+    {
         return $this->belongsToMany(Category::class, 'category_product', 'product_id', 'category_id');
     }
 
-    public function images() {
+    public function images()
+    {
         return $this->hasMany(ProductImage::class, 'product_id')->whereNull('product_variant_id')->orderBy('sort_order');
     }
 
-    public function primaryImage() {
+    public function primaryImage()
+    {
         return $this->hasOne(ProductImage::class, 'product_id')->whereNull('product_variant_id')->where('is_primary', true);
     }
 
-
     // This method returns the primary image if set, otherwise the first image in the list
-    public function resolvedPrimaryImage() {
+    public function resolvedPrimaryImage()
+    {
         if ($this->relationLoaded('primaryImage') && $this->primaryImage) {
             return $this->primaryImage;
         }
 
         if ($this->relationLoaded('primaryImage') && ! $this->primaryImage) {
-            if($this->relationLoaded('images')) {
+            if ($this->relationLoaded('images')) {
                 return $this->images->sortBy('sort_order')->first();
             }
+
             return $this->images()->orderBy('sort_order')->first();
         }
 
@@ -54,11 +59,13 @@ class Product extends Model
         return $this->images()->orderBy('sort_order')->first();
     }
 
-    public function coverImage() {
+    public function coverImage()
+    {
         return $this->hasOne(ProductImage::class, 'product_id')->whereNull('product_variant_id')->orderByDesc('is_primary')->orderBy('sort_order');
     }
 
-    public function galleryFor(?ProductVariant $variant=null) {
+    public function galleryFor(?ProductVariant $variant = null)
+    {
         // If a variant is provided, prefer its gallery
         if ($variant) {
             // Use eager-loaded relation if available; otherwise fetch ordered collection
@@ -80,15 +87,18 @@ class Product extends Model
 
     }
 
-    public function variants() {
+    public function variants()
+    {
         return $this->hasMany(ProductVariant::class, 'product_id');
     }
 
-    public function reviews() {
+    public function reviews()
+    {
         return $this->hasMany(Review::class);
     }
 
-    public function tags() {
+    public function tags()
+    {
         return $this->belongsToMany(Tag::class, 'product_tag', 'product_id', 'tag_id');
     }
 }

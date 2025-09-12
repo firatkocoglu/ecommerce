@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
@@ -43,7 +43,6 @@ class Payment extends Model
 
     public function getFormattedAmountAttribute()
     {
-        return number_format($this->amount, 2) . ' ' . strtoupper($this->currency);
+        return number_format($this->amount, 2).' '.strtoupper($this->currency);
     }
-
 }

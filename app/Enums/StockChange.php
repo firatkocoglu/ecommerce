@@ -12,8 +12,9 @@ enum StockChange: string
     case Cancellation = 'cancellation';
     case Refund = 'refund';
 
-    public function label(): string{
-        return match($this) {
+    public function label(): string
+    {
+        return match ($this) {
             self::Sale => 'Sale',
             self::Purchase => 'Purchase',
             self::Return => 'Return',
@@ -24,4 +25,3 @@ enum StockChange: string
         };
     }
 }
-

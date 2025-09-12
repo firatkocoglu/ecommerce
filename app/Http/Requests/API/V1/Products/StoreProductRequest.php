@@ -2,15 +2,16 @@
 
 namespace App\Http\Requests\API\V1\Products;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Http\Requests\Concerns\HasProductMessages;
 use App\Http\Requests\Concerns\HasImageAfterHooks;
 use App\Http\Requests\Concerns\HasProductDataPreparation;
+use App\Http\Requests\Concerns\HasProductMessages;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
-    use HasProductMessages, HasImageAfterHooks, HasProductDataPreparation;
+    use HasImageAfterHooks, HasProductDataPreparation, HasProductMessages;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -24,7 +25,6 @@ class StoreProductRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
     protected function prepareForValidation(): void
     {
         $this->prepareProductData();
@@ -46,7 +46,6 @@ class StoreProductRequest extends FormRequest
             // Relationships
             'category_id' => ['required', 'integer', 'exists:categories,id'],
 
-
             // Attributes
             'attributes' => ['nullable', 'array'],
 
@@ -58,12 +57,13 @@ class StoreProductRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator): void {
+    public function withValidator($validator): void
+    {
         $this->applySinglePrimaryImageRule($validator);
     }
 
-    public function messages(): array {
+    public function messages(): array
+    {
         return $this->productMessages();
     }
-
 }

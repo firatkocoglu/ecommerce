@@ -17,5 +17,5 @@ enum RefundStatus: string
             self::Completed => 'Completed',
             self::Rejected => 'Rejected',
         };
-    }   
+    }
 }

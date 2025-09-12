@@ -3,7 +3,9 @@
 /**
  * HINTS FOR IDE (VS Code / Intelephense):
  * These annotations let the IDE know that FormRequest carries Request methods.
+ *
  * @mixin \Illuminate\Http\Request
+ *
  * @method bool filled(string $key)
  * @method mixed input(string $key, $default = null)
  * @method mixed route(string|null $key = null, mixed $default = null)
@@ -31,13 +33,16 @@ class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         $id = (int) $this->route('id');
+
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'slug' => ['sometimes', 'string', 'max:255', 'unique:categories,slug,' . $id],
+            'slug' => ['sometimes', 'string', 'max:255', 'unique:categories,slug,'.$id],
             'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
         ];
     }
-    public function after(): array {
+
+    public function after(): array
+    {
         return [
             // Avoid self parenting category
             function ($validator) {
@@ -48,7 +53,7 @@ class UpdateCategoryRequest extends FormRequest
                         $validator->errors()->add('parent_id', 'The parent category cannot be the same as the current category.');
                     }
                 }
-            }
+            },
         ];
     }
 }

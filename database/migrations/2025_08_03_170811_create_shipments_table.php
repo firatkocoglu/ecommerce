@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('tracking_number')->nullable()->unique();
             $table->string('carrier');
             $table->string('status')->default(value: 'pending');
-            $table->timestamp('shipped_at')->nullable();    
+            $table->timestamp('shipped_at')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->string('notes')->nullable();
             $table->timestamps();

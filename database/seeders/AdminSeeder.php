@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Admin;
-
+use Illuminate\Database\Seeder;
 
 class AdminSeeder extends Seeder
 {
@@ -18,7 +17,7 @@ class AdminSeeder extends Seeder
             'email' => 'fratkocogl@gmail.com',
             'password' => env('ADMIN_PASSWORD'),
         ]);
-        
+
         $admin->assignRole('admin');
     }
 }

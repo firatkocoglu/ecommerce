@@ -2,12 +2,11 @@
 
 namespace App\Http\Resources\API\V1\Products;
 
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\API\V1\Categories\CategoryResource;
 use App\Http\Resources\API\V1\ReviewResource;
 use App\Http\Resources\API\V1\TagResource;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductResource extends JsonResource
 {

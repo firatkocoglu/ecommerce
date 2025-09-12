@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Enums\RefundStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Refund extends Model
 {
@@ -64,6 +64,6 @@ class Refund extends Model
 
     public function getFormattedRefundAmountAttribute()
     {
-        return number_format((float)$this->amount, 2, ',', '.') . ' ₺';
+        return number_format((float) $this->amount, 2, ',', '.').' ₺';
     }
 }

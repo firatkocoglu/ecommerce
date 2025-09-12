@@ -19,14 +19,13 @@ class ProductVariantSeeder extends Seeder
             $variantCount = fake()->numberBetween(1, 3);
 
             ProductVariant::factory()
-                    ->count($variantCount)
-                    ->for($product)
-                    ->make()
-                    ->each(function ($variant) use ($product) {
-                        $variant->price = $product->price + rand(0, 5000);
-                        $variant->save();
-                    });
-            }
+                ->count($variantCount)
+                ->for($product)
+                ->make()
+                ->each(function ($variant) use ($product) {
+                    $variant->price = $product->price + rand(0, 5000);
+                    $variant->save();
+                });
+        }
     }
-    }
-
+}

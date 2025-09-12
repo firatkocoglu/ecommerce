@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Outbox;
-use Illuminate\Support\Str;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class DispatchOutbox extends Command
 {
@@ -32,11 +32,12 @@ class DispatchOutbox extends Command
         $lock = Cache::lock('outbox-dispatcher', 55);
         if (! $lock->get()) {
             $this->warn('Another instance is already running. Exiting.');
+
             return self::SUCCESS;
         }
 
         try {
-            $limit    = (int) $this->option('limit');
+            $limit = (int) $this->option('limit');
             $workerId = (string) Str::uuid();
 
             $this->info('Dispatching pending Outbox events...');
@@ -51,6 +52,7 @@ class DispatchOutbox extends Command
 
             if ($events->isEmpty()) {
                 $this->info('No pending Outbox events found.');
+
                 return self::SUCCESS;
             }
 
@@ -68,7 +70,7 @@ class DispatchOutbox extends Command
                 } catch (\Throwable $e) {
                     // Mark failure and schedule a retry with backoff
                     $event->failWithBackoff($e->getMessage());
-                    $this->warn('Error: ' . $e->getMessage());
+                    $this->warn('Error: '.$e->getMessage());
                 }
             }
 
@@ -79,14 +81,15 @@ class DispatchOutbox extends Command
         }
     }
 
-    private function publish(Outbox $event) {
+    private function publish(Outbox $event)
+    {
         // Here you would implement the logic to publish the event.
         // This could involve dispatching a job, sending a message to a queue, etc.
         // For example:
         // event(new SomeEvent($event->payload));
-        
+
         // Placeholder for actual publishing logic
-        $this->info('Publishing event: ' . $event->event_type->value);
+        $this->info('Publishing event: '.$event->event_type->value);
 
         $this->line(sprintf(
             '→ PUBLISH %s [%s/%s] %s',
@@ -95,7 +98,7 @@ class DispatchOutbox extends Command
             $event->aggregate_id,
             json_encode($event->payload)
         ));
-        
+
         // Simulate successful publishing
         return true;
     }
