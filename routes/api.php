@@ -24,9 +24,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
         Route::post('/admin/logout-all', [AdminAuth::class, 'logoutAll'])->name('admin.logout.all');
 
+        // Category endpoints for admin
         Route::post('/categories', [CategoryAPIController::class, 'store'])->name('categories.store');
         Route::match(['put', 'patch'], '/categories/{id}', [CategoryAPIController::class, 'update'])->whereNumber('id')->name('categories.update');
         Route::delete('/categories/{id}', [CategoryAPIController::class, 'destroy'])->whereNumber('id')->name('categories.destroy');
+
+        // Product endpoints for admin
+        Route::post('/products', [ProductApiController::class, 'store'])->name('products.store');
     });
 
     /* **

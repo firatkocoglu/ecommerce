@@ -22,14 +22,14 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'price' => (float) $this->price,
-            'weight' => (float) $this->weight,
+            'price' => $this->price,
+            'weight' => $this->weight,
             'status' => $this->status,
-            'category' => CategoryResource::make($this->whenLoaded('category')),
-            'images' => ProductImageResource::collection($this->whenLoaded('images')),
-            'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
-            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
-            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'categories' => CategoryResource::collection($this->whenLoaded('categories'))
+//            'images' => ProductImageResource::collection($this->whenLoaded('images')),
+//            'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
+//            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
+//            'tags' => TagResource::collection($this->whenLoaded('tags')),
         ];
     }
 }

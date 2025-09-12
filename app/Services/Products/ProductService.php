@@ -2,11 +2,14 @@
 
 namespace App\Services\Products;
 
+use App\Enums\RefundStatus;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 use Throwable;
 
 class ProductService
@@ -70,17 +73,32 @@ class ProductService
      */
     public function create(array $data): Product
     {
-        // Implementation for creating a new product
-        return DB::transaction(function () use ($data) {
+        // Extract category IDs from data
+        $rawCategoryIds = Arr::pull($data, 'categories', []);
+
+        // Clean and validate category IDs
+        $categoryIds = collect($rawCategoryIds)->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->toArray();
+        // Create the product
+        return DB::transaction(function () use ($data, $categoryIds) {
+            // Validate category IDs
+            $validIds = Category::query()->whereIn('id', $categoryIds)->pluck('id')->toArray();
             // Create the product
             $product = Product::create($data);
 
+            // Attach categories if any valid IDs are provided
+            if(! empty($categoryIds)) {
+                $product->categories()->sync($validIds);
+            }
+
             DB::afterCommit(function () {
-                // Flush existing cache
                 Cache::tags(['products'])->flush();
             });
 
-            return $product;
+            return $product->load(['categories:id,name,slug']);
         });
     }
 

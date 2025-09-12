@@ -34,20 +34,20 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')],
+            'slug' => ['required', 'string', 'max:255', Rule::unique('products', 'slug')],
             'description' => ['nullable', 'string'],
 
             // Pricing & visibility
-            'price' => ['required_without:variants', 'numeric', 'min:0', 'decimal:0,2'],
-            'currency' => ['nullable', 'string', 'size:3'],
-            'status' => ['nullable', Rule::in(['draft', 'active', 'archived'])],
-            'visibility' => ['nullable', Rule::in(['public', 'private'])],
-
-            // Relationships
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'status' => ['required', Rule::in(['draft', 'active', 'archived'])],
+            'price' => ['required_without:variants', 'numeric', 'min:0'],
+            'weight' => ['required', 'numeric', 'min:0'],
 
             // Attributes
             'attributes' => ['nullable', 'array'],
+
+            // Relationships
+            'categories' => ['sometimes', 'array'],
+            'categories.*' => ['integer', 'exists:categories,id'],
 
             // Images
             'images' => ['nullable', 'array'],

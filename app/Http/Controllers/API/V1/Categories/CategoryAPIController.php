@@ -46,6 +46,9 @@ class CategoryAPIController extends Controller
         return CategoryResource::make($category);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function store(StoreCategoryRequest $request): JsonResponse
     {
         $data = $request->validated();
