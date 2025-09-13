@@ -31,6 +31,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         // Product endpoints for admin
         Route::post('/products', [ProductApiController::class, 'store'])->name('products.store');
+        Route::match(['put', 'patch'], '/products/{id}', [ProductApiController::class, 'update'])->name('products.update');
+        Route::delete('/products/{id}', [ProductApiController::class, 'destroy'])->whereNumber('id')->name('products.destroy');
     });
 
     /* **

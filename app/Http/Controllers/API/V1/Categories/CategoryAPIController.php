@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Services\Categories\CategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 class CategoryAPIController extends Controller
 {
@@ -47,7 +48,7 @@ class CategoryAPIController extends Controller
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function store(StoreCategoryRequest $request): JsonResponse
     {
@@ -59,6 +60,9 @@ class CategoryAPIController extends Controller
         return CategoryResource::make($category)->response()->setStatusCode(201);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function update(UpdateCategoryRequest $request, int $id): JsonResponse
     {
         $data = $request->validated();
@@ -69,6 +73,9 @@ class CategoryAPIController extends Controller
         return CategoryResource::make($category)->response()->setStatusCode(200);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function destroy(int $id): JsonResponse
     {
         $this->service->delete($id);

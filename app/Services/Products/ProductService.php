@@ -82,6 +82,7 @@ class ProductService
             ->unique()
             ->values()
             ->toArray();
+
         // Create the product
         return DB::transaction(function () use ($data, $categoryIds) {
             // Validate category IDs

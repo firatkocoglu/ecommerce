@@ -42,5 +42,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Prevent accessing missing attributes globally;
         Model::preventAccessingMissingAttributes();
+
     }
 }

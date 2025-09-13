@@ -25,10 +25,6 @@ class UpdateProductRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    protected function prepareForValidation(): void
-    {
-        $this->prepareProductData();
-    }
 
     public function rules(): array
     {
@@ -36,17 +32,25 @@ class UpdateProductRequest extends FormRequest
 
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'slug' => ['sometimes', 'nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
+            'slug' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
             'description' => ['sometimes', 'nullable', 'string'],
 
-            // Pricing & visibility
-            'price' => ['sometimes', 'numeric', 'min:0', 'decimal:0,2'],
-            'currency' => ['sometimes', 'nullable', 'string', 'size:3'],
-            'status' => ['sometimes', 'nullable', Rule::in(['draft', 'active', 'archived'])],
-            'visibility' => ['sometimes', 'nullable', Rule::in(['public', 'private'])],
+            // Pricing & weight
+            'price' => ['sometimes','required', function ($attribute, $value, $fail) {
+                if ($value === "") {
+                    $fail("The {$attribute} field cannot be empty.");
+                }
+            }, 'numeric', 'min:0'],
+            'weight' => ['sometimes', 'required', function ($attribute, $value, $fail) {
+                if ($value === "") {
+                    $fail("The {$attribute} field cannot be empty.");
+                }
+            }, 'numeric', 'min:0'],
+            'status' => ['sometimes', 'required', Rule::in(['draft', 'active', 'archived'])],
 
             // Relationships
-            'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
+            'categories' => ['sometimes', 'required', 'array'],
+            'categories.*' => ['integer', 'exists:categories,id'],
 
             // Attributes
             'attributes' => ['sometimes', 'nullable', 'array'],

@@ -29,7 +29,6 @@ class ProductApiController extends Controller
         // Find the product by ID
         // In product service, the existence of given ID will be checked by findOrFail
         $product = $this->service->findById($id);
-
         return ProductResource::make($product);
     }
 
@@ -38,21 +37,38 @@ class ProductApiController extends Controller
      */
     public function store(StoreProductRequest $request): JsonResponse
     {
+        // Validate the request data
         $data = $request->validated();
 
-        try {
-            $product = $this->service->create($data);
-            return ProductResource::make($product)
+        // Create a new product using the service
+        $product = $this->service->create($data);
+        return ProductResource::make($product)
                 ->response()
                 ->setStatusCode(201);
-        } catch (\Throwable $e) {
-            \Log::error('Product create failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
+
     }
 
+    /**
+     * @throws Throwable
+     */
+    public function update(UpdateProductRequest $request, int $id): ProductResource
+    {
+        // Validate the request data
+        $data = $request->validated();
 
+
+        // Update the product using the service
+        $product = $this->service->update($id, $data);
+        return ProductResource::make($product);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        // Delete the product using the service
+        $this->service->delete($id);
+        return response()->json(null, 204);
+    }
 }
