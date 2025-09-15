@@ -25,9 +25,9 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'weight' => $this->weight,
             'status' => $this->status,
-            'categories' => CategoryResource::collection($this->whenLoaded('categories'))
+            'categories' => CategoryResource::collection($this->whenLoaded('categories')),
+            'variants' => ProductVariantResource::collection($this->whenLoaded('variants'))
 //            'images' => ProductImageResource::collection($this->whenLoaded('images')),
-//            'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
 //            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
 //            'tags' => TagResource::collection($this->whenLoaded('tags')),
         ];

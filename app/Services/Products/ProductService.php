@@ -30,7 +30,7 @@ class ProductService
         // Eager load relationships and counts
         $query = $query->with(['categories:id,name,slug',
             'images',
-            'variants.images',
+            'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
             'primaryImage',
             'coverImage'])
             ->withCount(['variants', 'images']);
@@ -57,7 +57,7 @@ class ProductService
         // Eager load relationships and counts
         $query = $query->with(['categories:id,name,slug',
             'images' => fn ($q) => $q->orderByDesc('is_primary'),
-            'variants.images' => fn ($q) => $q->orderByDesc('is_primary'),
+            'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
             'primaryImage',
             'coverImage'])
             ->withCount(['variants', 'images']);

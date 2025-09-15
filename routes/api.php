@@ -9,6 +9,8 @@ use App\Http\Controllers\API\V1\APIAuth\PasswordResetController;
 use App\Http\Controllers\API\V1\Categories\CategoryAPIController;
 // Import API Product Controllers
 use App\Http\Controllers\API\V1\Products\ProductApiController;
+// Import API Product Variant Controllers
+use App\Http\Controllers\API\V1\ProductVariants\ProductVariantApiController;
 // Import API Category Controllers
 use Illuminate\Support\Facades\Route;
 
@@ -33,20 +35,33 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/products', [ProductApiController::class, 'store'])->name('products.store');
         Route::match(['put', 'patch'], '/products/{id}', [ProductApiController::class, 'update'])->name('products.update');
         Route::delete('/products/{id}', [ProductApiController::class, 'destroy'])->whereNumber('id')->name('products.destroy');
+
+        // Product variant endpoints for admin
+        Route::post('/variants', [ProductVariantApiController::class, 'store'])->name('variants.store');
+        Route::match(['put', 'patch'], '/variants/{id}', [ProductVariantApiController::class, 'update'])->whereNumber('id')->name('variants.update');
+        Route::delete('/variants/{id}', [ProductVariantApiController::class, 'destroy'])->whereNumber('id')->name('variants.destroy');
     });
 
     /* **
     Public routes
     ** */
-    // Product endpoints
-    Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
-    Route::get('/products/{id}', [ProductApiController::class, 'show'])->name('products.show');
 
     // Category endpoint
     Route::get('/categories', [CategoryAPIController::class, 'index'])->name('categories.index');
     Route::get('/categories/{id}', [CategoryAPIController::class, 'show'])
         ->whereNumber('id')->name('categories.show');
     Route::get('/categories/tree', [CategoryAPIController::class, 'tree'])->name('categories.tree');
+
+    // Product endpoints
+    Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
+    Route::get('/products/{id}', [ProductApiController::class, 'show'])->name('products.show');
+
+    // Variant endpoints
+    Route::get('/products/{productId}/variants', [ProductVariantApiController::class, 'index'] )->name('products.variants');
+    Route::get('/products/{productId}/variants/{variantId}', [ProductVariantApiController::class, 'show'] )
+        ->whereNumber('productId')->whereNumber('variantId')->name('products.variants.show');
+
+
 
     /* **
     SPA routes

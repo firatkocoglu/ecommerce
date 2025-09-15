@@ -39,9 +39,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Prevent setting wrong attributes globally
         Model::preventSilentlyDiscardingAttributes();
-
-        // Prevent accessing missing attributes globally;
+        // Prevent accessing missing attributes globally
         Model::preventAccessingMissingAttributes();
-
     }
 }

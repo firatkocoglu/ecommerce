@@ -24,6 +24,7 @@ class ProductVariantSeeder extends Seeder
                 ->make()
                 ->each(function ($variant) use ($product) {
                     $variant->price = $product->price + rand(0, 5000);
+                    $variant->product_id = $product->id;
                     $variant->save();
                 });
         }

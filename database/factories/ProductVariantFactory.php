@@ -21,6 +21,8 @@ class ProductVariantFactory extends Factory
             'size' => fake()->randomElement(['S', 'M', 'L', 'XL']),
             'weight' => fake()->numberBetween(100, 5000),
             'sku' => fake()->unique()->bothify('SKU-###??'),
+            'status' => 'active',
+            'price' => fake()->numberBetween(100, 5000),
             'created_at' => now(),
         ];
     }
