@@ -108,9 +108,23 @@ class ProductService
      */
     public function update(int $id, array $data): Product
     {
+        // Extract category IDs from data
+        $rawCategoryIds = Arr::pull($data, 'categories', null);
+        $categoryIds = $rawCategoryIds !== null  ? collect($rawCategoryIds)->map(fn($id) => (int)$id)
+                ->filter(fn($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->toArray() : null;
+
         // Implementation for updating an existing product
-        return DB::transaction(function () use ($id, $data) {
+        return DB::transaction(function () use ($id, $data, $categoryIds) {
             $product = Product::query()->lockForUpdate()->findOrFail($id);
+
+            // Sync categories only if category IDs provided
+            if ($categoryIds !== null) {
+                $validCategoryIds = Category::query()->whereIn('id', $categoryIds)->pluck('id')->toArray();
+                $product->categories()->sync($validCategoryIds);
+            }
 
             // Don't write the changes to db immediately
             $product->fill($data);

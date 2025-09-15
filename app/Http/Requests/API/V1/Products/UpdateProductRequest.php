@@ -49,8 +49,8 @@ class UpdateProductRequest extends FormRequest
             'status' => ['sometimes', 'required', Rule::in(['draft', 'active', 'archived'])],
 
             // Relationships
-            'categories' => ['sometimes', 'required', 'array'],
-            'categories.*' => ['integer', 'exists:categories,id'],
+            'categories' => ['sometimes', 'nullable', 'array'],
+            'categories.*' => ['integer', 'nullable', 'exists:categories,id'],
 
             // Attributes
             'attributes' => ['sometimes', 'nullable', 'array'],
