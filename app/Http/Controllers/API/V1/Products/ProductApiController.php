@@ -17,7 +17,7 @@ class ProductApiController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $perPage = request()->integer('per_page', 20);
+        $perPage = request()->integer('per_page', 10);
 
         $paginator = $this->service->listPaginated($perPage);
 

@@ -17,19 +17,20 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $attrs = $this->resource->toArray();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'description' => $this->description,
+            'description' => $this->when(array_key_exists('description', $attrs), fn() => $this->description),
             'price' => $this->price,
-            'weight' => $this->weight,
+            'weight' => $this->when(array_key_exists('weight', $attrs), fn() => $this->weight),
             'status' => $this->status,
-            'categories' => CategoryResource::collection($this->whenLoaded('categories')),
-            'variants' => ProductVariantResource::collection($this->whenLoaded('variants'))
-//            'images' => ProductImageResource::collection($this->whenLoaded('images')),
-//            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
-//            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'categories' => $this->when(array_key_exists('categories', $attrs), fn() => CategoryResource::collection($this->whenLoaded('categories'))),
+            'variants' => $this->when(array_key_exists('variants', $attrs), fn() => ProductVariantResource::collection($this->whenLoaded('variants'))),
+            'cover_image_url' => $this->when(array_key_exists('cover_image_url', $attrs), fn() => $this->cover_image_url),
         ];
     }
 }
+

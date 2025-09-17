@@ -41,5 +41,13 @@ class AppServiceProvider extends ServiceProvider
         Model::preventSilentlyDiscardingAttributes();
         // Prevent accessing missing attributes globally
         Model::preventAccessingMissingAttributes();
+
+        \DB::listen(function ($q) {
+            logger()->debug('[SQL]', [
+                'time_ms' => $q->time,
+                'sql'     => $q->sql,
+                'bindings'=> $q->bindings,
+            ]);
+        });
     }
 }

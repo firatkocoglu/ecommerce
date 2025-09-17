@@ -18,7 +18,7 @@ class ProductVariantService
         $query = $onlyActive ? $query->where('status', 'active') : $query;
 
         // Eager load relationships
-        $query = $query->with(['images'])->withCount('images');
+        $query = $query->with(['images']);
 
         return $query->get();
     }
@@ -34,7 +34,7 @@ class ProductVariantService
         $query = $onlyActive ? $query->where('status', 'active') : $query;
 
         // Eager load relationships
-        $query = $query->with(['images'])->withCount('images');
+        $query = $query->with(['images']);
 
         return $query->firstOrFail();
     }

@@ -62,7 +62,12 @@ class Product extends Model
 
     public function coverImage()
     {
-        return $this->hasOne(ProductImage::class, 'product_id')->whereNull('product_variant_id')->orderByDesc('is_primary')->orderBy('sort_order');
+        return $this->hasOne(ProductImage::class, 'product_id')
+            ->ofMany(
+                ['sort_order' => 'min'],
+                function ($query) {
+                    $query->whereNull('product_variant_id');
+            });
     }
 
     public function galleryFor(?ProductVariant $variant = null)

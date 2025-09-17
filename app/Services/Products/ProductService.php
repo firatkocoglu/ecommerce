@@ -2,11 +2,9 @@
 
 namespace App\Services\Products;
 
-use App\Enums\RefundStatus;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
@@ -14,31 +12,37 @@ use Throwable;
 
 class ProductService
 {
-    public function listPaginated(int $perPage, bool $onlyActive = true, bool $cacheActive = true): LengthAwarePaginator
+    public function listPaginated(int $perPage, ?int $afterId = null, bool $cacheActive = true): CursorPaginator
     {
         $perPage = max(1, min($perPage, 100));
-        $currentPage = Paginator::resolveCurrentPage() ?: 1;
 
-        $key = "products:paginated:page:{$currentPage}:perPage:{$perPage}:active:{$onlyActive}";
+        $cursor = request()->query('cursor');
+        $key = "products:cursor:".($cursor ?? null).":perPage:{$perPage}";
 
         // Implementation for listing products with pagination
-        $query = Product::query();
-
-        // Filter only active products if required
-        $query = $onlyActive ? $query->where('status', 'active') : $query;
-
-        // Eager load relationships and counts
-        $query = $query->with(['categories:id,name,slug',
-            'images',
-            'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
-            'primaryImage',
-            'coverImage'])
-            ->withCount(['variants', 'images']);
+        // Filter only active products
+        // Order by ID ascending
+        // Select only necessary fields
+        // Include cover image URL as a subquery
+        $query = Product::query()
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->select(['id', 'name', 'price', 'slug', 'status'])
+            ->selectSub(function ($sq) {
+                $sq->from('product_images')
+                    ->select('url')
+                    ->whereColumn('product_images.product_id', 'products.id')
+                    ->whereNull('product_variant_id')
+                    ->orderByRaw('CASE WHEN is_primary THEN 0 ELSE 1 END')
+                    ->orderBy('sort_order')
+                    ->orderByDesc('id')
+                    ->limit(1);
+            }, 'cover_image_url');
 
         // Cache the result if caching is enabled
-        return $cacheActive ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), function () use ($query, $perPage) {
-            return $query->paginate($perPage);
-        }) : $query->paginate($perPage);
+        return $cacheActive ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), function () use ($query, $perPage, $cursor) {
+            return $query->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
+        }) : $query->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
     }
 
     public function findById(int $id, $onlyActive = true, $cacheActive = true): Product
@@ -58,9 +62,7 @@ class ProductService
         $query = $query->with(['categories:id,name,slug',
             'images' => fn ($q) => $q->orderByDesc('is_primary'),
             'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
-            'primaryImage',
-            'coverImage'])
-            ->withCount(['variants', 'images']);
+            'coverImage']);
 
         // Cache the result if caching is enabled
         return $cacheActive ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), function () use ($query, $id) {
