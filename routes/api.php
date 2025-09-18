@@ -37,9 +37,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('/products/{id}', [ProductApiController::class, 'destroy'])->whereNumber('id')->name('products.destroy');
 
         // Product variant endpoints for admin
-        Route::post('/variants', [ProductVariantApiController::class, 'store'])->name('variants.store');
-        Route::match(['put', 'patch'], '/variants/{id}', [ProductVariantApiController::class, 'update'])->whereNumber('id')->name('variants.update');
-        Route::delete('/variants/{id}', [ProductVariantApiController::class, 'destroy'])->whereNumber('id')->name('variants.destroy');
+        Route::post('/products/{productId}/variants', [ProductVariantApiController::class, 'store'])->name('variants.store');
+        Route::match(['put', 'patch'], '/products/{productId}/variants/{variantId}', [ProductVariantApiController::class, 'update'])->whereNumber('id')->name('variants.update');
+        Route::delete('/products/{productId}/variants/{variantId}', [ProductVariantApiController::class, 'destroy'])->whereNumber('id')->name('variants.destroy');
     });
 
     /* **

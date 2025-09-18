@@ -48,7 +48,6 @@ class ProductService
     public function findById(int $id, $onlyActive = true, $cacheActive = true): Product
     {
         // Implementation for finding a product by its ID
-
         // Define key for naming cache
         $key = "products:show:id:{$id}:active:{$onlyActive}";
 

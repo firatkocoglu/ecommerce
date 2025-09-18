@@ -20,11 +20,6 @@ class UpdateVariantRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation(): void
-    {
-        $this->prepareVariantData();
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -32,12 +27,13 @@ class UpdateVariantRequest extends FormRequest
      */
     public function rules(): array
     {
-        $variantId = $this->route('id') ?? $this->route('variant');
+
+        $variantId = $this->route('id');
 
         return [
             'sku' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('product_variants', 'sku')->ignore($variantId)],
-            'price' => ['sometimes', 'required', 'numeric', 'min:0', 'decimal:0,2'],
-            'weight' => ['sometimes', 'nullable', 'numeric', 'min:0', 'decimal:0,2'],
+            'price' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'weight' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'options' => ['sometimes', 'nullable', 'array'],
 
             // Images

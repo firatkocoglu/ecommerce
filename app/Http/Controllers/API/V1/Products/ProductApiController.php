@@ -45,7 +45,6 @@ class ProductApiController extends Controller
         return ProductResource::make($product)
                 ->response()
                 ->setStatusCode(201);
-
     }
 
     /**

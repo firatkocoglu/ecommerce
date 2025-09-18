@@ -34,8 +34,8 @@ class StoreVariantRequest extends FormRequest
     {
         return [
             'sku' => ['required', 'string', 'max:100', Rule::unique('product_variants', 'sku')],
-            'price' => ['required', 'numeric', 'decimal:0,2', 'min:0'],
-            'weight' => ['nullable', 'numeric', 'min:0', 'decimal:0,2'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', Rule::in(['active', 'draft', 'archived'])],
             'options' => ['nullable', 'array'],
 

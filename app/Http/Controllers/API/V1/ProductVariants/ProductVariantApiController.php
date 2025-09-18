@@ -9,6 +9,7 @@ use App\Http\Requests\API\V1\Variants\StoreVariantRequest;
 use App\Http\Requests\API\V1\Variants\UpdateVariantRequest;
 use App\Http\Resources\API\V1\Products\ProductVariantResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Throwable;
 
 class ProductVariantApiController extends Controller
 {
@@ -33,5 +34,41 @@ class ProductVariantApiController extends Controller
         // Find the variant by product ID and variant ID
         $variant = $this->service->findById($productId, $variantId);
         return ProductVariantResource::make($variant);
+    }
+
+    public function store(StoreVariantRequest $request): JsonResponse
+    {
+        // Create a new variant using the validated data from the request
+        $productId = $request->route('productId');
+        $data = $request->validated();
+        $variant = $this->service->create($productId, $data);
+        return ProductVariantResource::make($variant)->response()->setStatusCode(201);
+    }
+
+    public function update(UpdateVariantRequest $request): ProductVariantResource
+    {
+        // Get the product ID and variant ID from the route parameters
+        $productId = $request->route('productId');
+        $variantId = $request->route('variantId');
+
+        // Update an existing variant using the validated data from the request
+        $data = $request->validated();
+
+        $variant = $this->service->update($productId, $variantId, $data);
+        return ProductVariantResource::make($variant);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function destroy(): JsonResponse
+    {
+        // Get the product ID and variant ID from the route parameters
+        $productId = request()->route('productId');
+        $variantId = request()->route('variantId');
+
+        // Delete the variant
+        $this->service->delete($productId, $variantId);
+        return response()->json(null, 204);
     }
 }
