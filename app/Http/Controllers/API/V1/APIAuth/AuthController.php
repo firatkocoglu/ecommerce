@@ -24,7 +24,6 @@ class AuthController extends Controller
                 'lastname' => $data['lastname'],
                 'email' => $data['email'],
                 'password' => $data['password'],
-                'role' => 'customer',
             ]);
 
             $user->sendEmailVerificationNotification();

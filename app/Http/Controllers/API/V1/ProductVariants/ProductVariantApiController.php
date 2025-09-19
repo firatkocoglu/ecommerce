@@ -3,72 +3,89 @@
 namespace App\Http\Controllers\API\V1\ProductVariants;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\ProductVariants\ProductVariantService;
+use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\API\V1\Variants\StoreVariantRequest;
 use App\Http\Requests\API\V1\Variants\UpdateVariantRequest;
 use App\Http\Resources\API\V1\Products\ProductVariantResource;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Throwable;
 
 class ProductVariantApiController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(private readonly ProductVariantService $service) {}
 
-    public function index(): AnonymousResourceCollection
+    public function index(Product $product): AnonymousResourceCollection
     {
         // Get the product ID from the route parameters
-        $productId = request()->route('productId');
 
         // List variants by product ID
-        $variants = $this->service->listByProductId($productId);
+        $variants = $this->service->listByProductId($product);
         return ProductVariantResource::collection($variants);
     }
 
-    public function show(): ProductVariantResource
+    public function show(Product $product, ProductVariant $variant): ProductVariantResource
     {
         // Get the product ID and variant ID from the route parameters
-        $productId = request()->route('productId');
-        $variantId = request()->route('variantId');
+
 
         // Find the variant by product ID and variant ID
-        $variant = $this->service->findById($productId, $variantId);
-        return ProductVariantResource::make($variant);
-    }
-
-    public function store(StoreVariantRequest $request): JsonResponse
-    {
-        // Create a new variant using the validated data from the request
-        $productId = $request->route('productId');
-        $data = $request->validated();
-        $variant = $this->service->create($productId, $data);
-        return ProductVariantResource::make($variant)->response()->setStatusCode(201);
-    }
-
-    public function update(UpdateVariantRequest $request): ProductVariantResource
-    {
-        // Get the product ID and variant ID from the route parameters
-        $productId = $request->route('productId');
-        $variantId = $request->route('variantId');
-
-        // Update an existing variant using the validated data from the request
-        $data = $request->validated();
-
-        $variant = $this->service->update($productId, $variantId, $data);
-        return ProductVariantResource::make($variant);
+        $variantData = $this->service->findById($product, $variant);
+        return ProductVariantResource::make($variantData);
     }
 
     /**
      * @throws Throwable
      */
-    public function destroy(): JsonResponse
+    public function store(Product $product, StoreVariantRequest $request): JsonResponse
     {
-        // Get the product ID and variant ID from the route parameters
-        $productId = request()->route('productId');
-        $variantId = request()->route('variantId');
+        // Ensure the user is an admin
+        if (! $request->user()?->hasRole('admin', 'admin')) {
+            abort(403);
+        }
+
+        // Create a new variant using the validated data from the request
+        $data = $request->validated();
+        $variant = $this->service->create($product, $data);
+        return ProductVariantResource::make($variant)->response()->setStatusCode(201);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function update(Product $product, ProductVariant $variant, UpdateVariantRequest $request): ProductVariantResource
+    {
+        // Ensure the user is an admin
+        if (! $request->user()?->hasRole('admin', 'admin')) {
+            abort(403);
+        }
+
+        // Update an existing variant using the validated data from the request
+        $data = $request->validated();
+
+
+        $variantData = $this->service->update($product, $variant, $data);
+        return ProductVariantResource::make($variantData);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function destroy(Request $request, Product $product, ProductVariant $variant): JsonResponse
+    {
+        // Ensure the user is an admin
+        if (! $request->user()?->hasRole('admin', 'admin')) {
+            abort(403);
+        }
 
         // Delete the variant
-        $this->service->delete($productId, $variantId);
+        $this->service->delete($product, $variant);
         return response()->json(null, 204);
     }
 }

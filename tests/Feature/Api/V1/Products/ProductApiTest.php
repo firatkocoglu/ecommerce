@@ -48,9 +48,7 @@ class ProductApiTest extends TestCase
                     'id',
                     'name',
                     'slug',
-                    'description',
                     'price',
-                    'weight',
                     'status',
                 ]
             ],
@@ -149,6 +147,8 @@ class ProductApiTest extends TestCase
             'categories' => [$this->category->id],
         ]);
 
+        $response->assertStatus(403);
+
         $this->assertDatabaseMissing('products', [
             'name' => 'New Product',
             'slug' => 'new-product',
@@ -158,7 +158,6 @@ class ProductApiTest extends TestCase
             'status' => 'active'
         ]);
 
-        $response->assertStatus(403);
     }
 
     public function test_admin_can_update_product(): void

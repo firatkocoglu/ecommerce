@@ -11,11 +11,11 @@ use Throwable;
 
 class ProductVariantService
 {
-    public function listByProductId(int $productId, bool $onlyActive = true): Collection
+    public function listByProductId(Product $product, bool $onlyActive = true): Collection
     {
         // Base query
         $query = ProductVariant::query()
-            ->where('product_id', $productId);
+            ->where('product_id', $product->id);
 
         // Filter only active variants if required
         $query = $onlyActive ? $query->where('status', 'active') : $query;
@@ -26,12 +26,17 @@ class ProductVariantService
         return $query->get();
     }
 
-    public function findById(int $productId, int $variantId,  bool $onlyActive = true): ProductVariant
+    public function findById(Product $product, ProductVariant $variant,  bool $onlyActive = true): ProductVariant
     {
+        // Ensure the variant actually belongs to the given product
+        if ($variant->product_id !== $product->id) {
+            abort(404);
+        }
+
         // Base query
         $query = ProductVariant::query()
-            ->where('product_id', $productId)
-            ->where('id', $variantId);
+            ->where('product_id', $product->id)
+            ->where('id', $variant->id);
 
         // Filter only active variants if required
         $query = $onlyActive ? $query->where('status', 'active') : $query;
@@ -45,26 +50,15 @@ class ProductVariantService
     /**
      * @throws Throwable
      */
-    public function create(int $productId, array $data): ProductVariant
+    public function create(Product $product, array $data): ProductVariant
     {
-        // Check if productId is provided
-        if (! $productId) {
-            throw new \InvalidArgumentException('Product ID is required to create a variant.');
-        }
-
-        // Check if productId is a valid integer
-        if (!is_numeric($productId) || (int)$productId <= 0)
-        {
-            throw new \InvalidArgumentException('Invalid Product ID provided.');
-        }
-
         // Implement variant creation logic here
-        return DB::transaction(function () use ($data, $productId) {
+        return DB::transaction(function () use ($data, $product) {
             // Find product and lock it for variant update
-            Product::query()->lockForUpdate()->findOrFail($productId);
+            Product::query()->where('id', $product->id)->lockForUpdate()->firstOrFail();
 
             // Assign the product ID to the variant data
-            $data['product_id'] = (int) $productId;
+            $data['product_id'] = (int) $product->id;
 
             // Create the product variant
             $variant = ProductVariant::create($data);
@@ -77,25 +71,34 @@ class ProductVariantService
         });
     }
 
-    public function update(int $productId, int $variantId, array $data): ProductVariant
+    /**
+     * @throws Throwable
+     */
+    public function update(Product $product, ProductVariant $variant, array $data): ProductVariant
     {
-        // Implement variant update logic here
-        return DB::transaction(function () use ($data, $productId, $variantId) {
-            // Find the variant and lock it for update
-            $variant = ProductVariant::query()->lockForUpdate()->findOrFail($variantId);
+        // Ensure the variant actually belongs to the given product
+        if ($variant->product_id !== $product->id) {
+            abort(404);
+        }
 
-            // Find the product and lock it for variant update
-            Product::query()->lockForUpdate()->findOrFail($productId);
+        // Implement variant update logic here
+        return DB::transaction(function () use ($data, $product, $variant) {
+            // Lock the product row to prevent concurrent updates
+            $locked = ProductVariant::query()
+                ->where('product_id', $product->id)
+                ->where('id', $variant->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             // Update the variant with new data but don't save to db
-            $variant->fill($data);
+            $locked->fill($data);
 
-            if (! $variant->isDirty()) {
+            if (! $locked->isDirty()) {
                 // No changes detected, return the existing variant
-                return $variant;
+                return $locked;
             }
 
-            $variant->save();
+            $locked->save();
 
             DB::afterCommit(function () {
                 // Clear relevant caches if necessary
@@ -109,20 +112,25 @@ class ProductVariantService
     /**
      * @throws Throwable
      */
-    public function delete(int $productId, int $variantId): void
+    public function delete(Product $product, ProductVariant $variant): void
     {
-        DB::transaction(function () use ($productId, $variantId) {
-            // Find the variant and lock it for deletion
-            $variant = ProductVariant::query()->lockForUpdate()->findOrFail($variantId);
+        // Ensure the variant actually belongs to the given product
+        if ($variant->product_id !== $product->id) {
+            abort(404);
+        }
 
-            // Find the product and lock it for variant update
-            Product::query()->lockForUpdate()->findOrFail($productId);
+        DB::transaction(function () use ($product, $variant) {
+            // Ensure the variant actually belongs to the given product and lock the row
+            $locked = ProductVariant::query()
+                ->where('product_id', $product->id)
+                ->where('id', $variant->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            // Delete the variant
-            $variant->delete();
+            // Perform the delete on the locked instance
+            $locked->delete();
 
             DB::afterCommit(function () {
-                // Clear relevant caches if necessary
                 Cache::tags(['products'])->flush();
             });
         });

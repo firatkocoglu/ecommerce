@@ -34,7 +34,9 @@ class UpdateVariantRequest extends FormRequest
             'sku' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('product_variants', 'sku')->ignore($variantId)],
             'price' => ['sometimes', 'required', 'numeric', 'min:0'],
             'weight' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'options' => ['sometimes', 'nullable', 'array'],
+            'color' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'size' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'status' => ['sometimes', 'required', Rule::in(['active', 'draft', 'archived'])],
 
             // Images
             'images' => ['sometimes', 'nullable', 'array'],

@@ -45,12 +45,13 @@ class CategoryService
         });
     }
 
-    public function findById(int $id): Category
+    public function findById(Category $category): Category
     {
         return Category::query()
+            ->whereKey($category->id)
             ->with(['parent:id,name,slug', 'children:id,name,slug,parent_id'])
             ->withCount('products')
-            ->findOrFail($id);
+            ->firstOrFail();
     }
 
     public function findBySlug(string $slug): Category
@@ -84,48 +85,48 @@ class CategoryService
     /**
      * @throws Throwable
      */
-    public function update(int $id, array $data): Category
+    public function update(Category $category, array $data): Category
     {
-        return DB::transaction(function () use ($id, $data) {
-            $category = Category::query()->lockForUpdate()->findOrFail($id);
+        return DB::transaction(function () use ($category, $data) {
+            $locked = Category::query()->whereKey($category->id)->lockForUpdate()->firstOrFail();
 
             // Don't write the changes to db immediately
-            $category->fill($data);
+            $locked->fill($data);
 
             // Any changes made?
-            if (! $category->isDirty()) {
-                return $category->load(['parent:id,name,slug', 'children:id,name,slug,parent_id']);
+            if (! $locked->isDirty()) {
+                return $locked->load(['parent:id,name,slug', 'children:id,name,slug,parent_id']);
             }
 
             // If any changes made then start writing to db.
-            $category->save();
+            $locked->save();
 
             DB::afterCommit(function () {
                 Cache::tags(['categories'])->flush();
             });
 
-            return $category->refresh()->load(['parent:id,name,slug', 'children:id,name,slug,parent_id']);
+            return $locked->refresh()->load(['parent:id,name,slug', 'children:id,name,slug,parent_id']);
         });
     }
 
     /**
      * @throws Throwable
      */
-    public function delete(int $id): void
+    public function delete(Category $category): void
     {
-        DB::transaction(function () use ($id) {
+        DB::transaction(function () use ($category) {
             // Lock category for deletion
-            $category = Category::query()->lockForUpdate()->findOrFail($id);
+            $locked = Category::query()->whereKey($category->id)->lockForUpdate()->firstOrFail();
 
-            if ($category->children()->exists()) {
+            if ($locked->children()->exists()) {
                 abort(422, 'Cannot delete category with children.');
             }
 
-            if ($category->products()->exists()) {
+            if ($locked->products()->exists()) {
                 abort(422, 'Cannot delete category with products.');
             }
 
-            $category->delete();
+            $locked->delete();
 
             DB::afterCommit(function () {
                 Cache::tags(['categories'])->flush();

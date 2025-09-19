@@ -110,9 +110,9 @@ class CategoryApiTest extends TestCase
         ]);
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer '.$token,
+            'Authorization' => "Bearer $token",
         ])
-            ->patchJson('/api/v1/categories/'.$category->id, [
+            ->patchJson("api/v1/categories/$category->id", [
                 'name' => 'Updated Category',
             ]);
 

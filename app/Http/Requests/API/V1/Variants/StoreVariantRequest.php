@@ -37,7 +37,8 @@ class StoreVariantRequest extends FormRequest
             'price' => ['required', 'numeric', 'min:0'],
             'weight' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', Rule::in(['active', 'draft', 'archived'])],
-            'options' => ['nullable', 'array'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'size' => ['nullable', 'string', 'max:50'],
 
             // Images
             'images' => ['nullable', 'array'],

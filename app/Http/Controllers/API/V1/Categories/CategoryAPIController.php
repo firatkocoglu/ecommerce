@@ -38,13 +38,13 @@ class CategoryAPIController extends Controller
         return CategoryTreeResource::collection($tree);
     }
 
-    public function show(int $id): CategoryResource
+    public function show(Category $category): CategoryResource
     {
         // Find the category by ID
         // In category service, the existence of given ID will be checked by findOrFail
-        $category = $this->service->findById($id);
+        $categoryData = $this->service->findById($category);
 
-        return CategoryResource::make($category);
+        return CategoryResource::make($categoryData);
     }
 
     /**
@@ -63,22 +63,22 @@ class CategoryAPIController extends Controller
     /**
      * @throws Throwable
      */
-    public function update(UpdateCategoryRequest $request, int $id): JsonResponse
+    public function update(Category $category, UpdateCategoryRequest $request): CategoryResource
     {
         $data = $request->validated();
 
         // Update the category
-        $category = $this->service->update($id, $data);
+        $categoryData = $this->service->update($category, $data);
 
-        return CategoryResource::make($category)->response()->setStatusCode(200);
+        return CategoryResource::make($categoryData);
     }
 
     /**
      * @throws Throwable
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Category $category): JsonResponse
     {
-        $this->service->delete($id);
+        $this->service->delete($category);
 
         return response()->json(null, 204);
     }

@@ -45,11 +45,11 @@ class ProductService
         }) : $query->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
     }
 
-    public function findById(int $id, $onlyActive = true, $cacheActive = true): Product
+    public function findById(Product $product, $onlyActive = true, $cacheActive = true): Product
     {
         // Implementation for finding a product by its ID
         // Define key for naming cache
-        $key = "products:show:id:{$id}:active:{$onlyActive}";
+        $key = "products:show:id:{$product->id}:active:{$onlyActive}";
 
         // Base query
         $query = Product::query();
@@ -63,10 +63,12 @@ class ProductService
             'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
             'coverImage']);
 
+        $fetch = fn () => $query->whereKey($product->id)->firstOrFail();
+
         // Cache the result if caching is enabled
-        return $cacheActive ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), function () use ($query, $id) {
-            return $query->findOrFail($id);
-        }) : $query->findOrFail($id);
+        return $cacheActive
+            ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), $fetch)
+            : $fetch();
     }
 
     /**
@@ -107,7 +109,7 @@ class ProductService
     /**
      * @throws Throwable
      */
-    public function update(int $id, array $data): Product
+    public function update(Product $product, array $data): Product
     {
         // Extract category IDs from data
         $rawCategoryIds = Arr::pull($data, 'categories', null);
@@ -118,42 +120,42 @@ class ProductService
                 ->toArray() : null;
 
         // Implementation for updating an existing product
-        return DB::transaction(function () use ($id, $data, $categoryIds) {
-            $product = Product::query()->lockForUpdate()->findOrFail($id);
+        return DB::transaction(function () use ($product, $data, $categoryIds) {
+            $locked = Product::query()->whereKey($product->id)->lockForUpdate()->firstOrFail();
 
             // Sync categories only if category IDs provided
             if ($categoryIds !== null) {
                 $validCategoryIds = Category::query()->whereIn('id', $categoryIds)->pluck('id')->toArray();
-                $product->categories()->sync($validCategoryIds);
+                $locked->categories()->sync($validCategoryIds);
             }
 
             // Don't write the changes to db immediately
-            $product->fill($data);
+            $locked->fill($data);
 
             // Any changes made?
-            if (! $product->isDirty()) {
-                return $product;
+            if (! $locked->isDirty()) {
+                return $locked;
             }
 
-            $product->save();
+            $locked->save();
 
             DB::afterCommit(function () {
                 Cache::tags(['products'])->flush();
             });
 
-            return $product->refresh();
+            return $locked->refresh();
         });
     }
 
     /**
      * @throws Throwable
      */
-    public function delete(int $id): void
+    public function delete(Product $product): void
     {
-        DB::transaction(function () use ($id) {
-            $product = Product::query()->lockForUpdate()->findOrFail($id);
+        DB::transaction(function () use ($product) {
+            $locked = Product::query()->whereKey($product->id)->lockForUpdate()->firstOrFail();
 
-            $product->delete();
+            $locked->delete();
 
             DB::afterCommit(function () {
                 Cache::tags(['products'])->flush();
