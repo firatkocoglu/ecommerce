@@ -37,7 +37,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         // Product variant endpoints for admin
         Route::post('/products/{product}/variants', [ProductVariantApiController::class, 'store'])->name('variants.store');
-        Route::scopeBindings()->group( function () {
+        Route::scopeBindings()->group(function () {
             Route::match(['put', 'patch'], '/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'update'])->name('variants.update');
             Route::delete('/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'destroy'])->name('variants.destroy');
         });
@@ -57,12 +57,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('/products/{product}', [ProductApiController::class, 'show'])->name('products.show');
 
     // Variant endpoints
-    Route::get('/products/{product}/variants', [ProductVariantApiController::class, 'index'] )->name('variants.index');
-    Route::scopeBindings()->group( function () {
-        Route::get('/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'show'] )
+    Route::get('/products/{product}/variants', [ProductVariantApiController::class, 'index'])->name('variants.index');
+    Route::scopeBindings()->group(function () {
+        Route::get('/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'show'])
             ->name('variants.show');
     });
-
 
     /* **
     SPA routes

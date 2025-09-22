@@ -22,7 +22,8 @@ class UpdateImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'url' => ['sometimes', 'required', 'string', 'url', 'max:2048'],
+            'image' => ['sometimes', 'required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'], // Max 5MB
+            'alt_text' => ['sometimes', 'nullable', 'string', 'max:255'],
             'is_primary' => ['sometimes', 'nullable', 'boolean'],
             'sort_order' => ['sometimes', 'nullable', 'integer', 'min:0'],
         ];

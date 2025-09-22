@@ -10,7 +10,13 @@ class ProductImage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'url',
+        'public_id',
+        'folder',
+        'alt_text',
+        'width',
+        'height',
+        'mime',
+        'size_bytes',
         'is_primary',
         'sort_order',
     ];

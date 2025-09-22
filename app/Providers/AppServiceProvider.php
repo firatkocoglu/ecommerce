@@ -45,8 +45,8 @@ class AppServiceProvider extends ServiceProvider
         \DB::listen(function ($q) {
             logger()->debug('[SQL]', [
                 'time_ms' => $q->time,
-                'sql'     => $q->sql,
-                'bindings'=> $q->bindings,
+                'sql' => $q->sql,
+                'bindings' => $q->bindings,
             ]);
         });
     }

@@ -25,7 +25,6 @@ class UpdateProductRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
     public function rules(): array
     {
         $productId = $this->route('id') ?? $this->route('product');
@@ -36,13 +35,13 @@ class UpdateProductRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
 
             // Pricing & weight
-            'price' => ['sometimes','required', function ($attribute, $value, $fail) {
-                if ($value === "") {
+            'price' => ['sometimes', 'required', function ($attribute, $value, $fail) {
+                if ($value === '') {
                     $fail("The {$attribute} field cannot be empty.");
                 }
             }, 'numeric', 'min:0'],
             'weight' => ['sometimes', 'required', function ($attribute, $value, $fail) {
-                if ($value === "") {
+                if ($value === '') {
                     $fail("The {$attribute} field cannot be empty.");
                 }
             }, 'numeric', 'min:0'],

@@ -68,7 +68,7 @@ class Product extends Model
                 ['sort_order' => 'min'],
                 function ($query) {
                     $query->whereNull('product_variant_id');
-            });
+                });
     }
 
     public function galleryFor(?ProductVariant $variant = null)

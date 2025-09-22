@@ -2,8 +2,8 @@
 
 namespace App\Services\ProductVariants;
 
-use App\Models\ProductVariant;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +26,7 @@ class ProductVariantService
         return $query->get();
     }
 
-    public function findById(Product $product, ProductVariant $variant,  bool $onlyActive = true): ProductVariant
+    public function findById(Product $product, ProductVariant $variant, bool $onlyActive = true): ProductVariant
     {
         // Ensure the variant actually belongs to the given product
         if ($variant->product_id !== $product->id) {
@@ -135,5 +135,4 @@ class ProductVariantService
             });
         });
     }
-
 }

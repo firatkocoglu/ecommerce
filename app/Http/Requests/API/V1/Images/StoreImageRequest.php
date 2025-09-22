@@ -3,9 +3,11 @@
 namespace App\Http\Requests\API\V1\Images;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\Concerns\HasImageAfterHooks;
 
 class StoreImageRequest extends FormRequest
 {
+    use HasImageAfterHooks;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -22,9 +24,15 @@ class StoreImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'url' => ['required', 'string', 'url', 'max:2048'],
+            'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+            'alt_text' => ['nullable', 'string', 'max:255'], // Max 5MB
             'is_primary' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $this->applySinglePrimaryImageRule($validator);
     }
 }

@@ -26,7 +26,7 @@ class Category extends Model
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    public function products() : BelongsToMany
+    public function products(): BelongsToMany
     {
         // Many-to-many: a category can have many products and a product can belong to many categories
         // Pivot table: category_product (category_id, product_id)

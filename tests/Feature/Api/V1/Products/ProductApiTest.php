@@ -4,12 +4,11 @@ namespace Tests\Feature\Api\V1\Products;
 
 use App\Models\Admin;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
-use App\Models\Product;
 
 class ProductApiTest extends TestCase
 {
@@ -35,11 +34,11 @@ class ProductApiTest extends TestCase
         $this->token = $this->admin->createToken('test-token', ['*'])->plainTextToken;
     }
 
-    public function test_public_can_list_products() : void
+    public function test_public_can_list_products(): void
     {
         Product::factory()->create();
 
-        $response = $this->getJson("/api/v1/products");
+        $response = $this->getJson('/api/v1/products');
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -50,14 +49,15 @@ class ProductApiTest extends TestCase
                     'slug',
                     'price',
                     'status',
-                ]
+                ],
             ],
             'links',
-            'meta'
+            'meta',
         ]);
     }
 
-    public function test_get_one_product() : void {
+    public function test_get_one_product(): void
+    {
         $product = Product::factory()->create();
 
         $response = $this->getJson("/api/v1/products/{$product->id}");
@@ -71,21 +71,21 @@ class ProductApiTest extends TestCase
                 'price',
                 'weight',
                 'status',
-            ]
+            ],
         ]);
     }
 
-    public function test_show_returns_404_when_product_not_found() : void
+    public function test_show_returns_404_when_product_not_found(): void
     {
         $response = $this->getJson('/api/v1/products/999999999');
 
         $response->assertStatus(404);
     }
 
-    public function test_admin_can_store_product() : void
+    public function test_admin_can_store_product(): void
     {
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer '. $this->token,
+            'Authorization' => 'Bearer '.$this->token,
         ])->postJson('/api/v1/products', [
             'name' => 'New Product',
             'slug' => 'new-product',
@@ -103,14 +103,14 @@ class ProductApiTest extends TestCase
             'description' => 'This is a new product',
             'price' => 99.99,
             'weight' => 1.5,
-            'status' => 'active'
+            'status' => 'active',
         ]);
     }
 
     public function test_category_product_relation_exists(): void
     {
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token
+            'Authorization' => 'Bearer '.$this->token,
         ])->postJson('/api/v1/products', [
             'name' => 'New Product',
             'slug' => 'new-product',
@@ -118,13 +118,13 @@ class ProductApiTest extends TestCase
             'price' => 99.99,
             'weight' => 1.5,
             'status' => 'active',
-            'categories' => [$this->category->id]
+            'categories' => [$this->category->id],
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('category_product', [
             'category_id' => $this->category->id,
-            'product_id' => $response->json('data.id')
+            'product_id' => $response->json('data.id'),
         ]);
     }
 
@@ -136,7 +136,7 @@ class ProductApiTest extends TestCase
         $token = $non_admin->createToken('test-token', ['*'])->plainTextToken;
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->postJson('/api/v1/products', [
             'name' => 'New Product',
             'slug' => 'new-product',
@@ -155,7 +155,7 @@ class ProductApiTest extends TestCase
             'description' => 'This is a new product',
             'price' => 99.99,
             'weight' => 1.5,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
     }
@@ -165,7 +165,7 @@ class ProductApiTest extends TestCase
         $product = Product::factory()->create();
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
         ])->patchJson("/api/v1/products/{$product->id}", [
             'name' => 'Updated Product',
             'slug' => 'updated-product',
@@ -173,7 +173,7 @@ class ProductApiTest extends TestCase
             'price' => 79.99,
             'weight' => 1.8,
             'status' => 'active',
-            'categories' => [$this->category->id]
+            'categories' => [$this->category->id],
         ]);
 
         $response->assertStatus(200);
@@ -184,22 +184,22 @@ class ProductApiTest extends TestCase
             'description' => 'This is an updated product',
             'price' => 79.99,
             'weight' => 1.8,
-            'status' => 'active'
+            'status' => 'active',
         ]);
     }
 
     public function test_cannot_update_non_existent_product(): void
     {
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
-        ])->patchJson("/api/v1/products/999999999", [
+            'Authorization' => 'Bearer '.$this->token,
+        ])->patchJson('/api/v1/products/999999999', [
             'name' => 'Updated Product',
             'slug' => 'updated-product',
             'description' => 'This is an updated product',
             'price' => 79.99,
             'weight' => 1.8,
             'status' => 'active',
-            'categories' => [$this->category->id]
+            'categories' => [$this->category->id],
         ]);
 
         $response->assertStatus(404);
@@ -211,7 +211,7 @@ class ProductApiTest extends TestCase
         $product->categories()->attach($this->category->id);
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
         ])->patchJson("/api/v1/products/{$product->id}", [
             'name' => 'Updated Product',
             'slug' => 'updated-product',
@@ -225,7 +225,7 @@ class ProductApiTest extends TestCase
         $response->assertStatus(200);
         $this->assertDatabaseHas('category_product', [
             'category_id' => $this->category->id,
-            'product_id' => $product->id
+            'product_id' => $product->id,
         ]);
     }
 
@@ -237,7 +237,7 @@ class ProductApiTest extends TestCase
         $newCategory = Category::factory()->create();
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
         ])->patchJson("/api/v1/products/{$product->id}", [
             'name' => 'Updated Product',
             'slug' => 'updated-product',
@@ -245,17 +245,17 @@ class ProductApiTest extends TestCase
             'price' => 79.99,
             'weight' => 1.8,
             'status' => 'active',
-            'categories' => [$newCategory->id]
+            'categories' => [$newCategory->id],
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('category_product', [
             'category_id' => $newCategory->id,
-            'product_id' => $product->id
+            'product_id' => $product->id,
         ]);
         $this->assertDatabaseMissing('category_product', [
             'category_id' => $this->category->id,
-            'product_id' => $product->id
+            'product_id' => $product->id,
         ]);
     }
 
@@ -265,7 +265,7 @@ class ProductApiTest extends TestCase
         $product->categories()->attach($this->category->id);
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
         ])->patchJson("/api/v1/products/{$product->id}", [
             'name' => 'Updated Product',
             'slug' => 'updated-product',
@@ -273,13 +273,13 @@ class ProductApiTest extends TestCase
             'price' => 79.99,
             'weight' => 1.8,
             'status' => 'active',
-            'categories' => [] // Empty array to clear relations
+            'categories' => [], // Empty array to clear relations
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('category_product', [
             'category_id' => $this->category->id,
-            'product_id' => $product->id
+            'product_id' => $product->id,
         ]);
     }
 
@@ -288,7 +288,7 @@ class ProductApiTest extends TestCase
         $product = Product::factory()->create();
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
+            'Authorization' => 'Bearer '.$this->token,
         ])->deleteJson("/api/v1/products/{$product->id}");
         $response->assertStatus(204);
 
@@ -307,7 +307,7 @@ class ProductApiTest extends TestCase
         $product = Product::factory()->create();
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->deleteJson("/api/v1/products/{$product->id}");
 
         $response->assertStatus(403);
@@ -320,8 +320,8 @@ class ProductApiTest extends TestCase
     public function test_cannot_delete_non_existent_product(): void
     {
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
-        ])->deleteJson("/api/v1/products/999999999");
+            'Authorization' => 'Bearer '.$this->token,
+        ])->deleteJson('/api/v1/products/999999999');
 
         $response->assertStatus(404);
     }

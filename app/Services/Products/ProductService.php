@@ -5,9 +5,9 @@ namespace App\Services\Products;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Arr;
 use Throwable;
 
 class ProductService
@@ -17,7 +17,7 @@ class ProductService
         $perPage = max(1, min($perPage, 100));
 
         $cursor = request()->query('cursor');
-        $key = "products:cursor:".($cursor ?? null).":perPage:{$perPage}";
+        $key = 'products:cursor:'.($cursor ?? null).":perPage:{$perPage}";
 
         // Implementation for listing products with pagination
         // Filter only active products
@@ -94,7 +94,7 @@ class ProductService
             $product = Product::create($data);
 
             // Attach categories if any valid IDs are provided
-            if(! empty($categoryIds)) {
+            if (! empty($categoryIds)) {
                 $product->categories()->sync($validIds);
             }
 
@@ -113,11 +113,11 @@ class ProductService
     {
         // Extract category IDs from data
         $rawCategoryIds = Arr::pull($data, 'categories', null);
-        $categoryIds = $rawCategoryIds !== null  ? collect($rawCategoryIds)->map(fn($id) => (int)$id)
-                ->filter(fn($id) => $id > 0)
-                ->unique()
-                ->values()
-                ->toArray() : null;
+        $categoryIds = $rawCategoryIds !== null ? collect($rawCategoryIds)->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->toArray() : null;
 
         // Implementation for updating an existing product
         return DB::transaction(function () use ($product, $data, $categoryIds) {

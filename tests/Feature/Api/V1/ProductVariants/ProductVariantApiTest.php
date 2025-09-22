@@ -31,20 +31,18 @@ class ProductVariantApiTest extends TestCase
         // Create a product for testing
         $this->product = Product::factory()->create();
 
-
         // Create an admin user and get token
         $this->admin = Admin::factory()->create();
         $this->admin->assignRole('admin');
 
         $this->token = $this->admin->createToken('test-token', ['*'])->plainTextToken;
 
-
     }
 
     public function test_public_can_list_product_variants()
     {
         $variant = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson("/api/v1/products/{$this->product->id}/variants", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -70,16 +68,16 @@ class ProductVariantApiTest extends TestCase
                     'color',
                     'size',
                     'weight',
-                    'images'
-                ]
-            ]
+                    'images',
+                ],
+            ],
         ]);
     }
 
     public function test_public_can_show_product_variant()
     {
         $variant = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson("/api/v1/products/{$this->product->id}/variants", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -95,15 +93,15 @@ class ProductVariantApiTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'data' => [
-                    'id',
-                    'product_id',
-                    'price',
-                    'sku',
-                    'color',
-                    'size',
-                    'weight',
-                    'images'
-                ]
+                'id',
+                'product_id',
+                'price',
+                'sku',
+                'color',
+                'size',
+                'weight',
+                'images',
+            ],
         ]);
     }
 
@@ -117,7 +115,7 @@ class ProductVariantApiTest extends TestCase
     {
 
         $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson("/api/v1/products/{$this->product->id}/variants", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -136,7 +134,7 @@ class ProductVariantApiTest extends TestCase
             'weight' => 0.5,
             'color' => 'Red',
             'size' => 'M',
-            'status' => 'active'
+            'status' => 'active',
         ]);
     }
 
@@ -147,8 +145,8 @@ class ProductVariantApiTest extends TestCase
 
         $token = $non_admin->createToken('test-token', ['*'])->plainTextToken;
         $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}"
-            ])->postJson("/api/v1/products/{$this->product->id}/variants", [
+            'Authorization' => "Bearer {$token}",
+        ])->postJson("/api/v1/products/{$this->product->id}/variants", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
             'color' => 'Red',
@@ -163,7 +161,7 @@ class ProductVariantApiTest extends TestCase
     public function test_admin_can_update_product_variant()
     {
         $variant = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson("/api/v1/products/{$this->product->id}/variants/", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -176,7 +174,7 @@ class ProductVariantApiTest extends TestCase
         $variant->assertStatus(201);
 
         $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->patchJson("/api/v1/products/{$this->product->id}/variants/{$variant->json('data.id')}", [
             'price' => 59.99,
             'color' => 'Blue',
@@ -194,14 +192,14 @@ class ProductVariantApiTest extends TestCase
             'color' => 'Blue',
             'size' => 'L',
             'weight' => 0.6,
-            'status' => 'draft'
+            'status' => 'draft',
         ]);
     }
 
     public function test_admin_cannot_update_nonexistent_variant()
     {
         $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->patchJson("/api/v1/products/{$this->product->id}/variants/99999", [
             'price' => 59.99,
             'color' => 'Blue',
@@ -217,7 +215,7 @@ class ProductVariantApiTest extends TestCase
     {
         // First, create a variant as admin
         $variant = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson("/api/v1/products/{$this->product->id}/variants", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -251,11 +249,10 @@ class ProductVariantApiTest extends TestCase
         $response->assertStatus(403);
     }
 
-
     public function test_admin_can_delete_product_variant()
     {
         $variant = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson("/api/v1/products/{$this->product->id}/variants", [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -268,12 +265,12 @@ class ProductVariantApiTest extends TestCase
         $variant->assertStatus(201);
 
         $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->deleteJson("/api/v1/products/{$this->product->id}/variants/{$variant->json('data.id')}");
 
         $response->assertStatus(204);
         $this->assertDatabaseMissing('product_variants', [
-            'id' => $variant->json('data.id')
+            'id' => $variant->json('data.id'),
         ]);
     }
 
@@ -282,7 +279,7 @@ class ProductVariantApiTest extends TestCase
         $storeUrl = route('api.v1.variants.store', ['product' => $this->product->id]);
         // First, create a variant as admin
         $variant = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}"
+            'Authorization' => "Bearer {$this->token}",
         ])->postJson($storeUrl, [
             'sku' => 'SKU123-XYZ',
             'price' => 49.99,
@@ -303,16 +300,16 @@ class ProductVariantApiTest extends TestCase
 
         // Now attempt to delete as non-admin
         $url = route('api.v1.variants.destroy', [
-                'product' => $this->product->id,
-                'variant' => $variant->json('data.id'),
-            ]);
+            'product' => $this->product->id,
+            'variant' => $variant->json('data.id'),
+        ]);
 
         $response = $this->deleteJson($url);
 
         $response->assertStatus(403);
 
         $this->assertDatabaseHas('product_variants', [
-            'id' => $variant->json('data.id')
+            'id' => $variant->json('data.id'),
         ]);
     }
 }
