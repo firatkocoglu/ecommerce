@@ -27,7 +27,6 @@ class StoreImageRequest extends FormRequest
             'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
             'alt_text' => ['nullable', 'string', 'max:255'], // Max 5MB
             'is_primary' => ['nullable', 'boolean'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

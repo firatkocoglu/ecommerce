@@ -19,11 +19,16 @@ class ProductImage extends Model
         'size_bytes',
         'is_primary',
         'sort_order',
+        'product_id',
+        'product_variant_id',
     ];
 
     protected $casts = [
         'is_primary' => 'boolean',
         'sort_order' => 'integer',
+        'width' => 'integer',
+        'height' => 'integer',
+        'size_bytes' => 'integer',
     ];
 
     public function product()

@@ -25,16 +25,16 @@ class ProductImageService
         $folderPath = "ecommerce/$productType/{$owner->id}";
 
         // Upload the file to Cloudinary
-        $upload = Cloudinary::upload($file->getRealPath(), [
+        $upload = Cloudinary::uploadApi()->upload($file->getRealPath(), [
             'folder' => $folderPath,
         ]);
 
         // Prepare data for the new product image using the upload result
         $response = [
-            'public_id' => $upload->getPublicId(),
-            'width' => $upload->getWidth(),
-            'height' => $upload->getHeight(),
-            'size_bytes' => $upload->getSize(),
+            'public_id' => Arr::get($upload, 'public_id'),
+            'width' => Arr::get($upload, 'width'),
+            'height' => Arr::get($upload, 'height'),
+            'size_bytes' => Arr::get($upload, 'size_bytes'),
             'mime' => $file->getMimeType(),
             'alt_text' => Arr::get($data, 'alt_text'),
             'is_primary' => (bool) Arr::get($data, 'is_primary', false),
@@ -51,10 +51,10 @@ class ProductImageService
                 ->lockForUpdate();
 
             // Check if there are existing images
-            $maxOrder = (clone $lockedImage)->max('sort_order') ?? 0;
+            $maxOrder = (clone $lockedImage)->orderBy('sort_order', 'desc')->value('sort_order') ?? 0;
 
             // Check if any existing image is marked as primary
-            $imagesHasPrimary = (clone $lockedImage)->where('is_primary', true)->exists();
+            $imagesHasPrimary = (clone $lockedImage)->where('is_primary', true)->value('id') !== null;
 
             // If there are no images yet, or if no primary image exists and the new one isn't marked as primary, set it as primary
             if ( $maxOrder === 0 || (! $imagesHasPrimary && $response['is_primary'] === false) )
@@ -88,7 +88,7 @@ class ProductImageService
             return $image;
         });
         }catch (\Throwable $e){
-            Cloudinary::destroy($response['public_id']);
+            Cloudinary::uploadApi()->destroy($response['public_id']);
             throw $e;
         }
     }

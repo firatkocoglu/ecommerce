@@ -8,6 +8,7 @@ use App\Http\Controllers\API\V1\APIAuth\EmailVerificationController;
 use App\Http\Controllers\API\V1\APIAuth\PasswordResetController;
 use App\Http\Controllers\API\V1\Categories\CategoryAPIController;
 // Import API Product Controllers
+use App\Http\Controllers\API\V1\ProductImages\ProductImageApiController;
 use App\Http\Controllers\API\V1\Products\ProductApiController;
 // Import API Product Variant Controllers
 use App\Http\Controllers\API\V1\ProductVariants\ProductVariantApiController;
@@ -40,6 +41,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::scopeBindings()->group(function () {
             Route::match(['put', 'patch'], '/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'update'])->name('variants.update');
             Route::delete('/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'destroy'])->name('variants.destroy');
+        });
+
+        // Product image endpoints for admin
+        Route::scopeBindings()->group(function () {
+            Route::post('/products/{product}/images', [ProductImageApiController::class, 'store'])->name('images.store');
+            Route::post('/products/{product}/variants/{variant}/images', [ProductImageApiController::class, 'store'])->name('images.store.variant');
         });
     });
 
