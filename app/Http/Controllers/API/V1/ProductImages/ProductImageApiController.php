@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\API\V1\ProductImages;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\V1\Images\StoreImageRequest;
 use App\Http\Resources\API\V1\Products\ProductImageResource;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Http\Requests\API\V1\Images\StoreImageRequest;
 use App\Services\ProductImages\ProductImageService;
 use Throwable;
 
@@ -21,7 +21,7 @@ class ProductImageApiController extends Controller
     {
         $owner = null;
 
-        if ($variant){
+        if ($variant) {
             $owner = $variant;
         } else {
             $owner = $product;

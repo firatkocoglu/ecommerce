@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\API\V1\Images;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Http\Requests\Concerns\HasImageAfterHooks;
+use Illuminate\Foundation\Http\FormRequest;
 
 class StoreImageRequest extends FormRequest
 {
     use HasImageAfterHooks;
+
     /**
      * Determine if the user is authorized to make this request.
      */
