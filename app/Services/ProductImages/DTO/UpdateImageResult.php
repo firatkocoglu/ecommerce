@@ -4,10 +4,10 @@ namespace App\Services\ProductImages\DTO;
 
 use App\Models\ProductImage;
 
-class UpdateImageResult
+readonly class UpdateImageResult
 {
     public function __construct(
-        public readonly ProductImage $image,
-        public readonly bool $siblingsChanged,
+        public ProductImage $image,
+        public bool $siblingsChanged,
     ) {}
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductImage extends Model
 {
@@ -19,8 +20,6 @@ class ProductImage extends Model
         'size_bytes',
         'is_primary',
         'sort_order',
-        'product_id',
-        'product_variant_id',
     ];
 
     protected $casts = [
@@ -31,12 +30,12 @@ class ProductImage extends Model
         'size_bytes' => 'integer',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function productVariant()
+    public function productVariant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class);
     }

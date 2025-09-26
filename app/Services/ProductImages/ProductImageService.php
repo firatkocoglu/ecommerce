@@ -72,8 +72,7 @@ class ProductImageService
                 }
 
                 // Save image record in the database
-                $image = ProductImage::create([
-                    $productType.'_id' => $lockedProduct->id,
+                $image = new ProductImage([
                     'public_id' => Arr::get($response, 'public_id'),
                     'folder' => $folderPath,
                     'alt_text' => Arr::get($response, 'alt_text') ?? "{$productType} #{$lockedProduct->id} image",
@@ -84,6 +83,12 @@ class ProductImageService
                     'mime' => Arr::get($response, 'mime'),
                     'size_bytes' => Arr::get($response, 'size_bytes'),
                 ]);
+
+                if ($productType === 'product') {
+                    $image->product()->associate($lockedProduct)->save();
+                } else {
+                    $image->productVariant()->associate($lockedProduct)->save();
+                }
 
                 DB::afterCommit(fn () => Cache::tags(['products', 'variants'])->flush());
 
@@ -146,17 +151,17 @@ class ProductImageService
                     ]);
                 }
 
-                if ($data) {
+                if (! empty($data)) {
                     // Handle updating is_primary flag
                     if (array_key_exists('is_primary', $data)) {
-                        if ($lockedImage->is_primary === false && $data['is_primary'] === true) {
+                        if (! $lockedImage->is_primary && $data['is_primary']) {
                             $lockedImage->fill(['is_primary' => true]);
 
                             // If the new image is marked as primary, unset the primary flag on existing images
                             (clone $siblingImages)->where('is_primary', true)->update(['is_primary' => false]);
                             $siblingsChanged = true;
 
-                        } elseif ($lockedImage->is_primary === true && $data['is_primary'] === false) {
+                        } elseif ($lockedImage->is_primary && ! $data['is_primary']) {
                             // Updating is_primary field can only be true
                             // If trying to set it to false, another image should be set as primary
                             // Reject the change if trying to mark false primary on the current primary image
@@ -182,9 +187,9 @@ class ProductImageService
                         }
 
                         // Sort order must not exceed the number of sibling images
-                        elseif ($newSortOrder > $lastOrder) {
-                            throw ValidationException::withMessages(['sort_order' => 'Sort order cannot exceed '.($lastOrder).'.']);
-                        }
+                        //                        elseif ($newSortOrder > $lastOrder) {
+                        //                            throw ValidationException::withMessages(['sort_order' => 'Sort order cannot exceed '.($lastOrder).'.']);
+                        //                        }
 
                         // New sort order is the same as the old one, no need to change
                         elseif ($newSortOrder === $oldSortOrder) {
@@ -193,15 +198,23 @@ class ProductImageService
 
                         // Adjust sort orders of sibling images
                         else {
+                            // Temporarily set the image's sort order to a value outside the current range to avoid unique constraint violations
+                            $temp = $lastOrder + 1;
+                            $lockedImage->update(['sort_order' => $temp]);
                             // If the new sort order is greater than the old one, decrement sort orders of images between old and new
                             if ($newSortOrder > $oldSortOrder) {
-                                (clone $siblingImages)->where('sort_order', '<=', $newSortOrder)->where('sort_order', '>', $oldSortOrder)->decrement('sort_order');
+                                for ($i = $oldSortOrder + 1; $i <= $newSortOrder; $i++) {
+                                    (clone $siblingImages)->where('sort_order', $i)->decrement('sort_order');
+                                }
                             }
 
                             // If the new sort order is less than the old one, increment sort orders of images between new and old
                             if ($newSortOrder < $oldSortOrder) {
-                                (clone $siblingImages)->where('sort_order', '>=', $newSortOrder)->where('sort_order', '<', $oldSortOrder)->increment('sort_order');
+                                for ($i = $oldSortOrder - 1; $i >= $newSortOrder; $i--) {
+                                    (clone $siblingImages)->where('sort_order', $i)->increment('sort_order');
+                                }
                             }
+
                             $lockedImage->fill(['sort_order' => $newSortOrder]);
                             $siblingsChanged = true;
                             unset($data['sort_order']);
@@ -209,7 +222,8 @@ class ProductImageService
                     }
 
                     // Update other fields
-                    $lockedImage->fill(Arr::only($data, ['alt_text']) ?? []);
+                    $lockedImage->fill(Arr::only($data, ['alt_text']));
+                    \Log::log('debug', 'ProductImageService update fill', ['data' => $data, 'image_id' => $lockedImage->id]);
                 }
 
                 if (! $lockedImage->isDirty()) {

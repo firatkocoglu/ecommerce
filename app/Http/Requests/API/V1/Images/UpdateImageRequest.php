@@ -11,7 +11,7 @@ class UpdateImageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,7 @@ class UpdateImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['sometimes', 'required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'], // Max 5MB
+            'image' => ['sometimes', 'required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // Max 5MB
             'alt_text' => ['sometimes', 'nullable', 'string', 'max:255'],
             'is_primary' => ['sometimes', 'nullable', 'boolean'],
             'sort_order' => ['sometimes', 'required', 'integer', 'min:1'],

@@ -36,6 +36,10 @@ return Application::configure(basePath: dirname(__DIR__))
             VerifyCsrfToken::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'telescope/*',
+        ]);
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
@@ -46,6 +50,4 @@ return Application::configure(basePath: dirname(__DIR__))
             ConvertEmptyStringsToNull::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
-    })->create();
+    ->withExceptions(function (Exceptions $exceptions): void {})->create();

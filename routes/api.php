@@ -47,6 +47,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::scopeBindings()->group(function () {
             Route::post('/products/{product}/images', [ProductImageApiController::class, 'store'])->name('images.store');
             Route::post('/products/{product}/variants/{variant}/images', [ProductImageApiController::class, 'store'])->name('images.store.variant');
+            Route::match(['put', 'patch'], '/products/{product}/images/{image}', [ProductImageApiController::class, 'update'])->name('images.update');
+            Route::match(['put', 'patch'], '/products/{product}/variants/{variant}/images/{image}', [ProductImageApiController::class, 'updateVariant'])->name('images.update.variant');
         });
     });
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProductStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,6 +20,25 @@ class Product extends Model
         'price',
         'weight',
     ];
+
+    protected $casts = [
+        'status' => ProductStatus::class,
+    ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', ProductStatus::Active->value);
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('status', ProductStatus::Draft->value);
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where('status', ProductStatus::Archived->value);
+    }
 
     public function categories(): BelongsToMany
     {
