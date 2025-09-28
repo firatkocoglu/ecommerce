@@ -67,4 +67,24 @@ class ProductImageApiController extends Controller
 
         return response()->json(['image' => new ProductImageResource($result->image), 'siblings_changed' => $result->siblingsChanged])->setStatusCode(200);
     }
+
+    /**
+     * @throws Throwable
+     */
+    public function destroy(Product $product, ProductImage $image): JsonResponse
+    {
+        $this->service->delete($product, $image);
+
+        return response()->json(null, 204);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function destroyVariant(Product $product, ProductVariant $variant, ProductImage $image): JsonResponse
+    {
+        $this->service->delete($variant, $image);
+
+        return response()->json(null, 204);
+    }
 }

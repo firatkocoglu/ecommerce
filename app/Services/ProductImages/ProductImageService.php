@@ -2,6 +2,7 @@
 
 namespace App\Services\ProductImages;
 
+use App\Events\ProductImageDeleted;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
@@ -223,7 +224,6 @@ class ProductImageService
 
                     // Update other fields
                     $lockedImage->fill(Arr::only($data, ['alt_text']));
-                    \Log::log('debug', 'ProductImageService update fill', ['data' => $data, 'image_id' => $lockedImage->id]);
                 }
 
                 if (! $lockedImage->isDirty()) {
@@ -250,5 +250,69 @@ class ProductImageService
             }
             throw $e;
         }
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function delete(Product|ProductVariant $owner, ProductImage $image): void
+    {
+        $productType = $owner instanceof Product ? 'product' : 'product_variant';
+        $productModel = $owner instanceof Product ? Product::class : ProductVariant::class;
+
+        DB::transaction(function () use ($owner, $image, $productType, $productModel) {
+            // Lock the image record for update
+            $lockedImage = ProductImage::where('id', $image->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Lock the owner record for update to prevent
+            $lockedProduct = $productModel::whereKey($owner->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $baseImages = ProductImage::where($productType.'_id', $lockedProduct->id)->lockForUpdate();
+
+            // Lock sibling images
+            $siblingImages = (clone $baseImages)->whereKeyNot($lockedImage->id);
+            $hasSiblings = (clone $siblingImages)->exists();
+
+            // Store the old sort order and old public ID before deletion
+            // Arrange sort orders of sibling images
+            $oldSortOrder = $lockedImage->sort_order;
+            $oldPublicId = $lockedImage->public_id;
+
+            // If the image to be deleted is primary, assign the image with the lowest sort order as primary
+            if ($hasSiblings) {
+                if ($lockedImage->is_primary) {
+                    $newPrimary = (clone $siblingImages)->orderBy('sort_order', 'asc')->value('sort_order') ?? 0;
+                    if ($newPrimary) {
+                        (clone $siblingImages)->where('sort_order', $newPrimary)->update(['is_primary' => true]);
+                    }
+                }
+
+                // Get the last sort order among images
+                $lastOrder = (clone $baseImages)->orderByDesc('sort_order')->value('sort_order') ?? 0;
+
+                // Temporarily set the image's sort order to a value outside the current range to avoid unique constraint violations
+                $temp = $lastOrder + 1;
+                $lockedImage->update(['sort_order' => $temp]);
+
+                // Decrement sort orders of images with sort order greater than the deleted image's sort order
+                for ($i = $oldSortOrder + 1; $i <= $lastOrder; $i++) {
+                    (clone $siblingImages)->where('sort_order', $i)->decrement('sort_order');
+                }
+            }
+
+            // Delete the image record from the database
+            $lockedImage->delete();
+
+            DB::afterCommit(function () use ($oldPublicId) {
+
+                event(new ProductImageDeleted($oldPublicId));
+                // Delete the image from Cloudinary after the transaction commits
+                Cache::tags(['products', 'variants'])->flush();
+            });
+        });
     }
 }

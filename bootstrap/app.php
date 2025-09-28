@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\RedirectIfNotAdmin;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
@@ -22,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('horizon:snapshot')->everyMinute();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->use([
             HandleCors::class,
@@ -44,6 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'auth.admin' => RedirectIfNotAdmin::class,
         ]);
 
         $middleware->remove([

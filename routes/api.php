@@ -16,11 +16,13 @@ use App\Http\Controllers\API\V1\ProductVariants\ProductVariantApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
-    /* **
-    Admin-only routes
-    ** */
-    Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login');
+    // Admin login routes with token based auth
+    Route::get('/admin/login', [AdminAuth::class, 'show'])->middleware('throttle:10,1')->name('admin.login');
+    Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login.submit');
 
+    /* **
+   Admin-only routes
+   ** */
     Route::middleware(['auth:sanctum', 'role:admin,admin', 'throttle:20,1'])->group(function () {
         Route::get('/admin/me', [AdminAuth::class, 'me'])->name('admin.me');
         Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
@@ -49,6 +51,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/products/{product}/variants/{variant}/images', [ProductImageApiController::class, 'store'])->name('images.store.variant');
             Route::match(['put', 'patch'], '/products/{product}/images/{image}', [ProductImageApiController::class, 'update'])->name('images.update');
             Route::match(['put', 'patch'], '/products/{product}/variants/{variant}/images/{image}', [ProductImageApiController::class, 'updateVariant'])->name('images.update.variant');
+            Route::delete('/products/{product}/images/{image}', [ProductImageApiController::class, 'destroy'])->name('images.destroy');
+            Route::delete('/products/{product}/variants/{variant}/images/{image}', [ProductImageApiController::class, 'destroyVariant'])->name('images.destroy.variant');
         });
     });
 
