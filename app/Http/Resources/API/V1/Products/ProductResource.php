@@ -27,7 +27,7 @@ class ProductResource extends JsonResource
             'status' => $this->status,
             'categories' => $this->when(array_key_exists('categories', $attrs), fn () => CategoryResource::collection($this->whenLoaded('categories'))),
             'variants' => $this->when(array_key_exists('variants', $attrs), fn () => ProductVariantResource::collection($this->whenLoaded('variants'))),
-            'cover_image_url' => $this->when(array_key_exists('cover_image_url', $attrs), fn () => $this->cover_image_url),
+            'images' => $this->when(array_key_exists('images', $attrs), fn () => ProductImageResource::collection($this->whenLoaded('images'))),
         ];
     }
 }

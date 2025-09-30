@@ -20,6 +20,7 @@ class ProductImage extends Model
         'size_bytes',
         'is_primary',
         'sort_order',
+        'status',
     ];
 
     protected $casts = [

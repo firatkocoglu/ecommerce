@@ -1,33 +1,25 @@
 <?php
 
-use App\Http\Controllers\API\V1\Admin\AdminAuth;
-// Import Admin Controller
-use App\Http\Controllers\API\V1\APIAuth\AuthController;
-// Import API Auth Controllers
-use App\Http\Controllers\API\V1\APIAuth\EmailVerificationController;
-use App\Http\Controllers\API\V1\APIAuth\PasswordResetController;
 use App\Http\Controllers\API\V1\Categories\CategoryAPIController;
-// Import API Product Controllers
 use App\Http\Controllers\API\V1\ProductImages\ProductImageApiController;
 use App\Http\Controllers\API\V1\Products\ProductApiController;
-// Import API Product Variant Controllers
 use App\Http\Controllers\API\V1\ProductVariants\ProductVariantApiController;
-// Import API Category Controllers
+use App\Http\Controllers\Auth\APIAuth\AuthController;
+use App\Http\Controllers\Auth\APIAuth\EmailVerificationController;
+use App\Http\Controllers\Auth\APIAuth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->name('api.v1.')->group(function () {
-    // Admin login routes with token based auth
-    Route::get('/admin/login', [AdminAuth::class, 'show'])->middleware('throttle:10,1')->name('admin.login');
-    Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login.submit');
+// Import Admin Controller
+// Import API Auth Controllers
+// Import API Product Controllers
+// Import API Product Variant Controllers
+// Import API Category Controllers
 
+Route::prefix('v1')->name('api.v1.')->group(function () {
     /* **
    Admin-only routes
    ** */
-    Route::middleware(['auth:sanctum', 'role:admin,admin', 'throttle:20,1'])->group(function () {
-        Route::get('/admin/me', [AdminAuth::class, 'me'])->name('admin.me');
-        Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
-        Route::post('/admin/logout-all', [AdminAuth::class, 'logoutAll'])->name('admin.logout.all');
-
+    Route::middleware(['web', 'auth:admin', 'throttle:20,1'])->group(function () {
         // Category endpoints for admin
         Route::post('/categories', [CategoryAPIController::class, 'store'])->name('categories.store');
         Route::match(['put', 'patch'], '/categories/{category}', [CategoryAPIController::class, 'update'])->name('categories.update');
@@ -67,14 +59,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // Product endpoints
     Route::get('/products', [ProductApiController::class, 'index'])->name('products.index');
-    Route::get('/products/{product}', [ProductApiController::class, 'show'])->name('products.show');
+    Route::get('/products/{id}', [ProductApiController::class, 'show'])->name('products.show');
 
     // Variant endpoints
-    Route::get('/products/{product}/variants', [ProductVariantApiController::class, 'index'])->name('variants.index');
-    Route::scopeBindings()->group(function () {
-        Route::get('/products/{product}/variants/{variant}', [ProductVariantApiController::class, 'show'])
+    Route::get('/products/{productId}/variants', [ProductVariantApiController::class, 'index'])->name('variants.index');
+    Route::get('/products/{productId}/variants/{variantId}', [ProductVariantApiController::class, 'show'])
             ->name('variants.show');
-    });
+
 
     /* **
     SPA routes

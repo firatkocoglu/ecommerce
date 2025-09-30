@@ -2,7 +2,9 @@
 
 namespace App\Services\ProductImages;
 
+use App\Enums\ImageStatus;
 use App\Events\ProductImageDeleted;
+use App\Jobs\UploadImageJob;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
@@ -14,6 +16,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Storage;
 use Throwable;
 
 class ProductImageService
@@ -25,78 +28,69 @@ class ProductImageService
     {
         // Determine the folder path based on whether the owner is a Product or ProductVariant
         $productType = $owner instanceof Product ? 'product' : 'product_variant';
-        $productModel = $owner instanceof Product ? Product::class : ProductVariant::class;
         $folderPath = "ecommerce/$productType/{$owner->id}";
 
-        // Upload the file to Cloudinary
-        $upload = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-            'folder' => $folderPath,
-        ]);
-
-        // Prepare data for the new product image using the upload result
-        $response = [
-            'public_id' => Arr::get($upload, 'public_id'),
-            'width' => Arr::get($upload, 'width'),
-            'height' => Arr::get($upload, 'height'),
-            'size_bytes' => Arr::get($upload, 'bytes'),
-            'mime' => $file->getMimeType(),
-            'alt_text' => Arr::get($data, 'alt_text'),
-            'is_primary' => (bool) Arr::get($data, 'is_primary', false),
-        ];
+        // Define a temporary path to store the uploaded file before processing
+        $tempPath = $file->store('images', 'local');
+        $fullPath = Storage::disk('local')->path($tempPath);
 
         try {
             // Implementation for creating a new product image
-            return DB::transaction(function () use ($owner, $response, $productType, $productModel, $folderPath) {
-                // Lock the owner record for update to prevent race conditions
-                $lockedProduct = $productModel::whereKey($owner->id)->lockForUpdate()->firstOrFail();
-
+            return DB::transaction(function () use ($owner, $data,  $folderPath, $fullPath, $productType) {
                 // Lock the existing images for the owner
-                $lockedImage = ProductImage::where($productType.'_id', $lockedProduct->id)
-                    ->lockForUpdate();
+                $lockedImages = ProductImage::where($productType.'_id', $owner->id)
+                    ->lockForUpdate()->get(['sort_order', 'is_primary']);
 
-                // Check if there are existing images
-                $maxOrder = (clone $lockedImage)->orderBy('sort_order', 'desc')->value('sort_order') ?? 0;
-
-                // Check if any existing image is marked as primary
-                $imagesHasPrimary = (clone $lockedImage)->where('is_primary', true)->value('id') !== null;
+                $maxOrder = (int) $lockedImages->max('sort_order');
+                $hasPrimary = (bool) $lockedImages->contains('is_primary', true);
+                $isPrimary = (! $hasPrimary);
 
                 // If there are no images yet, or if no primary image exists and the new one isn't marked as primary, set it as primary
-                if ($maxOrder === 0 || (! $imagesHasPrimary && $response['is_primary'] === false)) {
-                    $response['is_primary'] = true;
+                if ($maxOrder === 0 || ! $hasPrimary) {
+                    $isPrimary = true;
                 }
 
                 // If the new image is marked as primary, unset the primary flag on existing images
-                if (Arr::get($response, 'is_primary')) {
-                    (clone $lockedImage)
+                if ($isPrimary) {
+                    ProductImage::where($productType.'_id', $owner->id)
                         ->where('is_primary', true)
                         ->update(['is_primary' => false]);
                 }
 
-                // Save image record in the database
+                // Only initialize image storing process with a minimal record and later dispatch a job to upload the image after commit
                 $image = new ProductImage([
-                    'public_id' => Arr::get($response, 'public_id'),
-                    'folder' => $folderPath,
-                    'alt_text' => Arr::get($response, 'alt_text') ?? "{$productType} #{$lockedProduct->id} image",
-                    'is_primary' => Arr::get($response, 'is_primary', false),
+                    'status' => ImageStatus::PROCESSING,
+                    'is_primary' => $isPrimary,
                     'sort_order' => $maxOrder + 1,
-                    'width' => Arr::get($response, 'width'),
-                    'height' => Arr::get($response, 'height'),
-                    'mime' => Arr::get($response, 'mime'),
-                    'size_bytes' => Arr::get($response, 'size_bytes'),
+                    'alt_text' => $data['alt_text'] ?? null,
+                    'folder' => $folderPath,
                 ]);
 
+                // Associate the image with the product or variant
                 if ($productType === 'product') {
-                    $image->product()->associate($lockedProduct)->save();
+                    $image->product()->associate($owner)->save();
                 } else {
-                    $image->productVariant()->associate($lockedProduct)->save();
+                    $image->productVariant()->associate($owner)->save();
                 }
 
-                DB::afterCommit(fn () => Cache::tags(['products', 'variants'])->flush());
+                // Prepare extra data to pass to the job
+                $extraData = [
+                    'imageId' => $image->id,
+                    'productType' => $productType,
+                    'folderPath' => $folderPath,
+                ];
+
+                DB::afterCommit(function () use ($fullPath, $extraData){
+                    // Dispatch the job to upload the image to Cloudinary after the transaction commits
+                    UploadImageJob::dispatch($fullPath, $extraData)->onQueue('media');
+                    Cache::tags(['products', 'variants'])->flush();
+                });
 
                 return $image;
             });
         } catch (\Throwable $e) {
-            Cloudinary::uploadApi()->destroy($response['public_id']);
+            // If any error occurs, delete the uploaded image from temp folder to avoid orphaned files
+            if (!empty($fullPath) && is_file($fullPath)) @unlink($fullPath);
             throw $e;
         }
     }
@@ -117,6 +111,8 @@ class ProductImageService
         $newUpload = null;
         if ($file) {
             $newUpload = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                'allowed_formats' => ['jpg', 'jpeg', 'png', 'webp'],
+                'resource_type' => 'image',
                 'folder' => $folderPath,
             ]);
         }

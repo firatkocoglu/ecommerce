@@ -25,11 +25,11 @@ class ProductApiController extends Controller
         return ProductResource::collection($paginator);
     }
 
-    public function show(Product $product): ProductResource
+    public function show(int $id): ProductResource
     {
         // Find the product by ID
         // In product service, the existence of given ID will be checked by findOrFail
-        $productData = $this->service->findById($product);
+        $productData = $this->service->findById($id);
 
         return ProductResource::make($productData);
     }

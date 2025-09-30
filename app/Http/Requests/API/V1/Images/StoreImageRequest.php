@@ -2,8 +2,12 @@
 
 namespace App\Http\Requests\API\V1\Images;
 
+use App\Enums\ImageStatus;
 use App\Http\Requests\Concerns\HasImageAfterHooks;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
 
 class StoreImageRequest extends FormRequest
 {
@@ -14,20 +18,21 @@ class StoreImageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user('admin') !== null;
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
-            'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+            'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'alt_text' => ['nullable', 'string', 'max:255'], // Max 5MB
             'is_primary' => ['nullable', 'boolean'],
+            'status' => ['nullable', Rule::in([ImageStatus::PROCESSING, ImageStatus::COMPLETED, ImageStatus::FAILED])],
         ];
     }
 

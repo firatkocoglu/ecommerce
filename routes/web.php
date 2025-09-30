@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\V1\Admin\AdminAuth;
+use App\Http\Controllers\Auth\AdminAuth;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,8 +18,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
+
 // Session based admin login routes
 Route::get('/admin/login', [AdminAuth::class, 'show'])->middleware('throttle:10,1')->name('admin.login');
 Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login.submit');
 
-require __DIR__.'/auth.php';
+Route::middleware(['auth:admin'])->group(function () {
+    Route::get('/admin/me', [AdminAuth::class, 'me'])->name('admin.me');
+    Route::post('/admin/logout', [AdminAuth::class, 'logout'])->name('admin.logout');
+    Route::post('/admin/logout-all', [AdminAuth::class, 'logoutAll'])->name('admin.logout.all');
+});

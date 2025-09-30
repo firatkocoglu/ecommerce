@@ -12,7 +12,7 @@ use Throwable;
 
 class ProductService
 {
-    public function listPaginated(int $perPage, ?int $afterId = null, bool $cacheActive = true): CursorPaginator
+    public function listPaginated(int $perPage, bool $cacheActive = true): CursorPaginator
     {
         $perPage = max(1, min($perPage, 100));
 
@@ -28,16 +28,8 @@ class ProductService
             ->where('status', 'active')
             ->orderBy('id')
             ->select(['id', 'name', 'price', 'slug', 'status'])
-            ->selectSub(function ($sq) {
-                $sq->from('product_images')
-                    ->select('url')
-                    ->whereColumn('product_images.product_id', 'products.id')
-                    ->whereNull('product_variant_id')
-                    ->orderByRaw('CASE WHEN is_primary THEN 0 ELSE 1 END')
-                    ->orderBy('sort_order')
-                    ->orderByDesc('id')
-                    ->limit(1);
-            }, 'cover_image_url');
+            ->with(['images' => fn ($q) => $q->orderByDesc('is_primary')->limit(1)]
+            );
 
         // Cache the result if caching is enabled
         return $cacheActive ? Cache::tags(['products'])->remember($key, now()->addMinutes(2), function () use ($query, $perPage, $cursor) {
@@ -45,11 +37,17 @@ class ProductService
         }) : $query->cursorPaginate($perPage, ['*'], 'cursor', $cursor);
     }
 
-    public function findById(Product $product, $onlyActive = true, $cacheActive = true): Product
+    public function findById(int $id, bool $onlyActive = true, bool $cacheActive = true): Product
     {
+        // Check if the provided ID is valid
+        $int = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($int === false) {
+            throw new \InvalidArgumentException('Invalid product ID provided.');
+        }
+
         // Implementation for finding a product by its ID
         // Define key for naming cache
-        $key = "products:show:id:{$product->id}:active:{$onlyActive}";
+        $key = "products:show:id:{$id}:active:{$onlyActive}";
 
         // Base query
         $query = Product::query();
@@ -57,13 +55,13 @@ class ProductService
         // Filter only active products if required
         $query = $onlyActive ? $query->where('status', 'active') : $query;
 
-        // Eager load relationships and counts
-        $query = $query->with(['categories:id,name,slug',
+        //Eager load relationships and counts
+        $query = $query->with([
             'images' => fn ($q) => $q->orderByDesc('is_primary'),
             'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
-            'coverImage']);
+            ]);
 
-        $fetch = fn () => $query->whereKey($product->id)->firstOrFail();
+        $fetch = fn () => $query->whereKey($id)->firstOrFail();
 
         // Cache the result if caching is enabled
         return $cacheActive
@@ -99,7 +97,7 @@ class ProductService
             }
 
             DB::afterCommit(function () {
-                Cache::tags(['products'])->flush();
+                Cache::tags(['products', 'variants'])->flush();
             });
 
             return $product->load(['categories:id,name,slug']);
@@ -140,7 +138,7 @@ class ProductService
             $locked->save();
 
             DB::afterCommit(function () {
-                Cache::tags(['products'])->flush();
+                Cache::tags(['products', 'variants'])->flush();
             });
 
             return $locked->refresh();
@@ -158,7 +156,7 @@ class ProductService
             $locked->delete();
 
             DB::afterCommit(function () {
-                Cache::tags(['products'])->flush();
+                Cache::tags(['products', 'variants'])->flush();
             });
         });
     }

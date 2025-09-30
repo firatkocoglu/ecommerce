@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\V1\APIAuth;
+namespace App\Http\Controllers\Auth\APIAuth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;

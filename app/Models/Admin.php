@@ -18,7 +18,6 @@ class Admin extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'is_super_admin',
     ];
 
     protected $hidden = [

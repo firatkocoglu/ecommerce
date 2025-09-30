@@ -21,18 +21,18 @@ class ProductVariantApiController extends Controller
 
     public function __construct(private readonly ProductVariantService $service) {}
 
-    public function index(Product $product): AnonymousResourceCollection
+    public function index(int $productId): AnonymousResourceCollection
     {
         // List variants by product ID
-        $variants = $this->service->listByProductId($product);
+        $variants = $this->service->listByProductId($productId);
 
         return ProductVariantResource::collection($variants);
     }
 
-    public function show(Product $product, ProductVariant $variant): ProductVariantResource
+    public function show(int $productId, int $variantId): ProductVariantResource
     {
         // Find the variant by product ID and variant ID
-        $variantData = $this->service->findById($product, $variant);
+        $variantData = $this->service->findById($productId, $variantId);
 
         return ProductVariantResource::make($variantData);
     }
