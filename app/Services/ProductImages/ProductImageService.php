@@ -8,6 +8,7 @@ use App\Jobs\UploadImageJob;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
+use App\Services\ProductImages\DTO\OwnerContext;
 use App\Services\ProductImages\DTO\UpdateImageResult;
 use Cloudinary\Api\Exception\ApiError;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -28,7 +29,7 @@ class ProductImageService
     {
         // Determine the folder path based on whether the owner is a Product or ProductVariant
         $productType = $owner instanceof Product ? 'product' : 'product_variant';
-        $folderPath = "ecommerce/$productType/{$owner->id}";
+        $folderPath = "ecommerce/$productType";
 
         // Define a temporary path to store the uploaded file before processing
         $tempPath = $file->store('images', 'local');
@@ -36,7 +37,7 @@ class ProductImageService
 
         try {
             // Implementation for creating a new product image
-            return DB::transaction(function () use ($owner, $data,  $folderPath, $fullPath, $productType) {
+            return DB::transaction(function () use ($owner, $data, $folderPath, $fullPath, $productType) {
                 // Lock the existing images for the owner
                 $lockedImages = ProductImage::where($productType.'_id', $owner->id)
                     ->lockForUpdate()->get(['sort_order', 'is_primary']);
@@ -80,7 +81,7 @@ class ProductImageService
                     'folderPath' => $folderPath,
                 ];
 
-                DB::afterCommit(function () use ($fullPath, $extraData){
+                DB::afterCommit(function () use ($fullPath, $extraData) {
                     // Dispatch the job to upload the image to Cloudinary after the transaction commits
                     UploadImageJob::dispatch($fullPath, $extraData)->onQueue('media');
                     Cache::tags(['products', 'variants'])->flush();
@@ -90,7 +91,9 @@ class ProductImageService
             });
         } catch (\Throwable $e) {
             // If any error occurs, delete the uploaded image from temp folder to avoid orphaned files
-            if (!empty($fullPath) && is_file($fullPath)) @unlink($fullPath);
+            if (! empty($fullPath) && is_file($fullPath)) {
+                @unlink($fullPath);
+            }
             throw $e;
         }
     }
@@ -99,54 +102,35 @@ class ProductImageService
      * @throws ApiError
      * @throws Throwable
      */
-    public function update(Product|ProductVariant $owner, ProductImage $image, ?array $data, ?UploadedFile $file): UpdateImageResult
+    public function update(OwnerContext $owner, int $imageId, ?array $data, ?UploadedFile $file): UpdateImageResult
     {
         // Determine the folder path based on whether the owner is a Product or ProductVariant
-        $productType = $owner instanceof Product ? 'product' : 'product_variant';
-        $folderPath = "ecommerce/$productType/{$owner->id}";
+        $productType = $owner->type;
+        $typeId = $owner->id;
+        $fk = $owner->fk();
+        $folderPath = "ecommerce/{$productType}";
 
-        // Determine the model class
-        $productModel = $owner instanceof Product ? Product::class : ProductVariant::class;
+        \Illuminate\Log\log($typeId);
 
-        $newUpload = null;
-        if ($file) {
-            $newUpload = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                'allowed_formats' => ['jpg', 'jpeg', 'png', 'webp'],
-                'resource_type' => 'image',
-                'folder' => $folderPath,
-            ]);
-        }
+        // Define a temporary path to store the uploaded file before processing
+        $tempPath = $file?->store('images', 'local');
+        $fullPath = $tempPath ? Storage::disk('local')->path($tempPath) : null;
+
+        // Prepare extra data to pass to the job
+        $uploadData = $file ? [
+            'imageId' => $imageId,
+            'productType' => $productType,
+            'folderPath' => $folderPath,
+        ] : null;
 
         try {
-            return DB::transaction(function () use ($owner, $image, $data, $productType, $newUpload, $productModel, $file, $folderPath) {
-                // Lock the owner record for update to prevent
-                $baseProduct = $productModel::whereKey($owner->id)->lockForUpdate();
-                $lockedProduct = (clone $baseProduct)->firstOrFail();
-
-                // Lock the image record for update
-                $lockedImage = ProductImage::where('id', $image->id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-
+            return DB::transaction(function () use ($typeId, $fk, $imageId, $data, $file, $uploadData, $fullPath) {
                 // Sibling images query
-                $baseImages = ProductImage::where($productType.'_id', $lockedProduct->id)->lockForUpdate();
-                $siblingImages = (clone $baseImages)->whereKeyNot($lockedImage->id);
+                $baseImages = ProductImage::where($fk, $typeId)->lockForUpdate();
+                $baseCollection = (clone $baseImages)->get();
+
+                $lockedImage = $baseCollection->firstWhere('id', $imageId);
                 $siblingsChanged = false;
-
-                // Obtain existing public ID for deletion if a new image is uploaded
-                $oldPublicId = $lockedImage->public_id;
-
-                // Update the image record if a new image file is uploaded
-                if ($newUpload) {
-                    $lockedImage->fill([
-                        'public_id' => Arr::get($newUpload, 'public_id'),
-                        'folder' => $folderPath,
-                        'width' => Arr::get($newUpload, 'width'),
-                        'height' => Arr::get($newUpload, 'height'),
-                        'mime' => $file->getMimeType(),
-                        'size_bytes' => Arr::get($newUpload, 'bytes'),
-                    ]);
-                }
 
                 if (! empty($data)) {
                     // Handle updating is_primary flag
@@ -155,7 +139,8 @@ class ProductImageService
                             $lockedImage->fill(['is_primary' => true]);
 
                             // If the new image is marked as primary, unset the primary flag on existing images
-                            (clone $siblingImages)->where('is_primary', true)->update(['is_primary' => false]);
+
+                            $baseImages->whereKeyNot($imageId)->where('is_primary', true)->update(['is_primary' => false]);
                             $siblingsChanged = true;
 
                         } elseif ($lockedImage->is_primary && ! $data['is_primary']) {
@@ -176,17 +161,12 @@ class ProductImageService
                         $oldSortOrder = $lockedImage->sort_order;
 
                         // Get the last sort order among images
-                        $lastOrder = (clone $baseImages)->orderByDesc('sort_order')->value('sort_order') ?? 0;
+                        $lastOrder = $baseCollection->max('sort_order');
 
                         // Sort order must be a positive integer
                         if ($newSortOrder < 1) {
                             throw ValidationException::withMessages(['sort_order' => 'Sort order must be a positive integer.']);
                         }
-
-                        // Sort order must not exceed the number of sibling images
-                        //                        elseif ($newSortOrder > $lastOrder) {
-                        //                            throw ValidationException::withMessages(['sort_order' => 'Sort order cannot exceed '.($lastOrder).'.']);
-                        //                        }
 
                         // New sort order is the same as the old one, no need to change
                         elseif ($newSortOrder === $oldSortOrder) {
@@ -196,20 +176,16 @@ class ProductImageService
                         // Adjust sort orders of sibling images
                         else {
                             // Temporarily set the image's sort order to a value outside the current range to avoid unique constraint violations
-                            $temp = $lastOrder + 1;
+                            $temp = $lastOrder + 1000;
                             $lockedImage->update(['sort_order' => $temp]);
                             // If the new sort order is greater than the old one, decrement sort orders of images between old and new
                             if ($newSortOrder > $oldSortOrder) {
-                                for ($i = $oldSortOrder + 1; $i <= $newSortOrder; $i++) {
-                                    (clone $siblingImages)->where('sort_order', $i)->decrement('sort_order');
-                                }
+                                $baseImages->whereKeyNot($imageId)->whereBetween('sort_order', [$oldSortOrder + 1, $newSortOrder])->decrement('sort_order');
                             }
 
                             // If the new sort order is less than the old one, increment sort orders of images between new and old
                             if ($newSortOrder < $oldSortOrder) {
-                                for ($i = $oldSortOrder - 1; $i >= $newSortOrder; $i--) {
-                                    (clone $siblingImages)->where('sort_order', $i)->increment('sort_order');
-                                }
+                                $baseImages->whereKeyNot($imageId)->whereBetween('sort_order', [$newSortOrder, $oldSortOrder - 1])->increment('sort_order');
                             }
 
                             $lockedImage->fill(['sort_order' => $newSortOrder]);
@@ -222,7 +198,7 @@ class ProductImageService
                     $lockedImage->fill(Arr::only($data, ['alt_text']));
                 }
 
-                if (! $lockedImage->isDirty()) {
+                if (! $lockedImage->isDirty() && ! $file) {
                     // No changes detected
                     return new UpdateImageResult($lockedImage, false);
                 }
@@ -231,18 +207,20 @@ class ProductImageService
                 $lockedImage->save();
 
                 // If a new image was uploaded, delete the old image from Cloudinary after the transaction commits
-                DB::afterCommit(function () use ($newUpload, $oldPublicId) {
-                    if ($newUpload) {
-                        Cloudinary::uploadApi()->destroy($oldPublicId);
+                DB::afterCommit(function () use ($file, $fullPath, $uploadData) {
+                    if ($file) {
+                        // Dispatch the job to upload the image to Cloudinary
+                        UploadImageJob::dispatch($fullPath, $uploadData)->onQueue('media');
                     }
+
                     Cache::tags(['products', 'variants'])->flush();
                 });
 
                 return new UpdateImageResult($lockedImage, $siblingsChanged);
             });
         } catch (\Throwable $e) {
-            if ($newUpload) {
-                Cloudinary::uploadApi()->destroy(Arr::get($newUpload, 'public_id'));
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
             }
             throw $e;
         }

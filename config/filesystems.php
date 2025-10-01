@@ -74,9 +74,9 @@ return [
             'driver' => 'local',
             'root' => PHP_OS_FAMILY === 'Windows'
                 ? storage_path('app/tmp')
-            : rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . '/app_tmp',
+            : rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).'/app_tmp',
             'throw' => true,
-        ]
+        ],
 
     ],
 

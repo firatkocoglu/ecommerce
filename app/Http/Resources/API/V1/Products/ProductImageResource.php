@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources\API\V1\Products;
 
+use App\Helpers\ImageUrlHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Helpers\ImageUrlHelper;
 
 class ProductImageResource extends JsonResource
 {

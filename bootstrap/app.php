@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\RedirectIfNotAdmin;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -16,10 +15,6 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
-use Laravel\Sanctum\Http\Middleware\CheckAbilities;
-use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
-
-
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -29,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('horizon:snapshot')->everyMinute();
+        $schedule->command('horizon:snapshot')->everyTwoMinutes();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->use([

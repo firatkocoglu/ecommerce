@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('public_id')->nullable()->change();
         });
     }
+
     /**
      * Reverse the migrations.
      */

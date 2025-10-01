@@ -9,6 +9,7 @@ use App\Http\Resources\API\V1\Products\ProductImageResource;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
+use App\Services\ProductImages\DTO\OwnerContext;
 use App\Services\ProductImages\ProductImageService;
 use Cloudinary\Api\Exception\ApiError;
 use Illuminate\Http\JsonResponse;
@@ -43,13 +44,13 @@ class ProductImageApiController extends Controller
      * @throws ApiError
      * @throws Throwable
      */
-    public function update(Product $product, ProductImage $image, UpdateImageRequest $request): JsonResponse
+    public function update(int $productId, int $imageId, UpdateImageRequest $request): JsonResponse
     {
-
         $data = $request->validated();
         $imageFile = $request->file('image');
+        $owner = new OwnerContext('product', $productId);
 
-        $result = $this->service->update($product, $image, $data, $imageFile);
+        $result = $this->service->update($owner, $imageId, $data, $imageFile);
 
         return response()->json(['image' => new ProductImageResource($result->image), 'siblings_changed' => $result->siblingsChanged])->setStatusCode(200);
     }
@@ -58,12 +59,13 @@ class ProductImageApiController extends Controller
      * @throws ApiError
      * @throws Throwable
      */
-    public function updateVariant(Product $product, ProductVariant $variant, ProductImage $image, UpdateImageRequest $request): JsonResponse
+    public function updateVariant(int $productId, int $variantId, int $imageId, UpdateImageRequest $request): JsonResponse
     {
         $data = $request->validated();
         $imageFile = $request->file('image');
+        $owner = new OwnerContext('variant', $variantId);
 
-        $result = $this->service->update($variant, $image, $data, $imageFile);
+        $result = $this->service->update($owner, $imageId, $data, $imageFile);
 
         return response()->json(['image' => new ProductImageResource($result->image), 'siblings_changed' => $result->siblingsChanged])->setStatusCode(200);
     }

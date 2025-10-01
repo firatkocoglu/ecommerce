@@ -47,7 +47,7 @@ class Product extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductImage::class, 'product_id')->whereNull('product_variant_id')->orderBy('sort_order');
+        return $this->hasMany(ProductImage::class, 'product_id')->whereNull('product_variant_id');
     }
 
     public function primaryImage()

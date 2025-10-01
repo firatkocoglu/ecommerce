@@ -54,7 +54,7 @@ class ProductVariant extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class, 'product_variant_id')->whereNull('product_id')->orderBy('sort_order');
+        return $this->hasMany(ProductImage::class, 'product_variant_id')->whereNull('product_id');
     }
 
     public function primaryImage(): HasOne

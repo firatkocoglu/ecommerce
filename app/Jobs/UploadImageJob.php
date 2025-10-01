@@ -11,16 +11,18 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Str;
 use Throwable;
 
 class UploadImageJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue;
+    use InteractsWithQueue, Queueable;
 
     public int $tries = 3;
+
     public array $backoff = [5, 30, 120];
+
     public int $timeout = 120;
+
     /**
      * Create a new job instance.
      */
@@ -29,12 +31,13 @@ class UploadImageJob implements ShouldQueue
         public array $data,
     ) {
         $this->afterCommit = true;
-        $this->connection  = 'redis';
+        $this->connection = 'redis';
         $this->queue = 'media';
     }
 
     /**
      * Execute the job.
+     *
      * @throws ApiError
      * @throws Throwable
      */
@@ -45,7 +48,8 @@ class UploadImageJob implements ShouldQueue
 
         // Guard: temp file must exist & be readable
         if (! is_readable($this->fullPath)) {
-            $this->fail(new \RuntimeException('Temp image not found or unreadable: ' . $this->fullPath));
+            $this->fail(new \RuntimeException('Temp image not found or unreadable: '.$this->fullPath));
+
             return;
         }
 
@@ -66,7 +70,7 @@ class UploadImageJob implements ShouldQueue
                 'height' => Arr::get($upload, 'height'),
                 'mime' => Arr::get($upload, 'format'),
                 'size_bytes' => Arr::get($upload, 'bytes'),
-                'status' => ImageStatus::COMPLETED
+                'status' => ImageStatus::COMPLETED,
             ];
 
             DB::transaction(function () use ($data) {
@@ -81,18 +85,15 @@ class UploadImageJob implements ShouldQueue
             if (file_exists($this->fullPath)) {
                 unlink($this->fullPath);
             }
-        }
-        catch (ApiError $e) {
+        } catch (ApiError $e) {
             try {
                 ProductImage::query()
                     ->whereKey($this->data['imageId'])
                     ->update(['status' => ImageStatus::FAILED]);
-            }
-            catch (Throwable $innerError)
-            {
+            } catch (Throwable $innerError) {
                 report($innerError);
             }
             throw $e;
-            }
         }
+    }
 }

@@ -55,11 +55,11 @@ class ProductService
         // Filter only active products if required
         $query = $onlyActive ? $query->where('status', 'active') : $query;
 
-        //Eager load relationships and counts
+        // Eager load relationships and counts
         $query = $query->with([
             'images' => fn ($q) => $q->orderByDesc('is_primary'),
             'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
-            ]);
+        ]);
 
         $fetch = fn () => $query->whereKey($id)->firstOrFail();
 

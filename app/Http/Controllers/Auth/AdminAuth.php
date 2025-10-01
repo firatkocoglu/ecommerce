@@ -18,7 +18,7 @@ class AdminAuth extends Controller
         Auth::shouldUse('admin');
 
         $credentials = $request->validate([
-            'email'    => ['required','email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 

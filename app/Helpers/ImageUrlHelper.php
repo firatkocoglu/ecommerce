@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 class ImageUrlHelper
 {
-    public static function createCloudinaryUrl(string $publicId): array|null
+    public static function createCloudinaryUrl(string $publicId): ?array
     {
         if (empty($publicId)) {
             return null;
@@ -26,7 +26,7 @@ class ImageUrlHelper
         $urls = [];
 
         foreach ($transform as $key => $transformation) {
-            $urls[$key] = $baseUrl . $transformation . '/' . ltrim($publicId, '/');
+            $urls[$key] = $baseUrl.$transformation.'/'.ltrim($publicId, '/');
         }
 
         return $urls;

@@ -20,7 +20,7 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 
-// Session based admin login routes
+// Session based admin auth routes
 Route::get('/admin/login', [AdminAuth::class, 'show'])->middleware('throttle:10,1')->name('admin.login');
 Route::post('/admin/login', [AdminAuth::class, 'login'])->middleware('throttle:10,1')->name('admin.login.submit');
 
