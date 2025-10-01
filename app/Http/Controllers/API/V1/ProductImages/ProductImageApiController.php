@@ -7,7 +7,6 @@ use App\Http\Requests\API\V1\Images\StoreImageRequest;
 use App\Http\Requests\API\V1\Images\UpdateImageRequest;
 use App\Http\Resources\API\V1\Products\ProductImageResource;
 use App\Models\Product;
-use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Services\ProductImages\DTO\OwnerContext;
 use App\Services\ProductImages\ProductImageService;
@@ -73,9 +72,11 @@ class ProductImageApiController extends Controller
     /**
      * @throws Throwable
      */
-    public function destroy(Product $product, ProductImage $image): JsonResponse
+    public function destroy(int $productId, int $imageId): JsonResponse
     {
-        $this->service->delete($product, $image);
+        $owner = new OwnerContext('product', $productId);
+
+        $this->service->delete($owner, $imageId);
 
         return response()->json(null, 204);
     }
@@ -83,9 +84,11 @@ class ProductImageApiController extends Controller
     /**
      * @throws Throwable
      */
-    public function destroyVariant(Product $product, ProductVariant $variant, ProductImage $image): JsonResponse
+    public function destroyVariant(int $productId, int $variantId, int $imageId): JsonResponse
     {
-        $this->service->delete($variant, $image);
+        $owner = new OwnerContext('variant', $variantId);
+
+        $this->service->delete($owner, $imageId);
 
         return response()->json(null, 204);
     }

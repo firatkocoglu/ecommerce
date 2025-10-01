@@ -30,11 +30,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/products/{product}/images', [ProductImageApiController::class, 'store'])->name('images.store');
         Route::match(['put', 'patch'], '/products/{productId}/images/{imageId}', [ProductImageApiController::class, 'update'])->name('images.update');
         Route::match(['put', 'patch'], '/products/{productId}/variants/{variantId}/images/{imageId}', [ProductImageApiController::class, 'updateVariant'])->name('images.update.variant');
+        Route::delete('/products/{productId}/images/{imageId}', [ProductImageApiController::class, 'destroy'])->name('images.destroy');
+        Route::delete('/products/{productId}/variants/{variantId}/images/{imageId}', [ProductImageApiController::class, 'destroyVariant'])->name('images.destroy.variant');
 
         Route::scopeBindings()->group(function () {
             Route::post('/products/{product}/variants/{variant}/images', [ProductImageApiController::class, 'store'])->name('images.store.variant');
-            Route::delete('/products/{product}/images/{image}', [ProductImageApiController::class, 'destroy'])->name('images.destroy');
-            Route::delete('/products/{product}/variants/{variant}/images/{image}', [ProductImageApiController::class, 'destroyVariant'])->name('images.destroy.variant');
+
         });
     });
 });

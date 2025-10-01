@@ -110,8 +110,6 @@ class ProductImageService
         $fk = $owner->fk();
         $folderPath = "ecommerce/{$productType}";
 
-        \Illuminate\Log\log($typeId);
-
         // Define a temporary path to store the uploaded file before processing
         $tempPath = $file?->store('images', 'local');
         $fullPath = $tempPath ? Storage::disk('local')->path($tempPath) : null;
@@ -229,27 +227,19 @@ class ProductImageService
     /**
      * @throws Throwable
      */
-    public function delete(Product|ProductVariant $owner, ProductImage $image): void
+    public function delete(OwnerContext $owner, int $imageId): void
     {
-        $productType = $owner instanceof Product ? 'product' : 'product_variant';
-        $productModel = $owner instanceof Product ? Product::class : ProductVariant::class;
+        $productId = $owner->id;
+        $fk = $owner->fk();
 
-        DB::transaction(function () use ($owner, $image, $productType, $productModel) {
+        DB::transaction(function () use ($productId, $fk, $imageId) {
             // Lock the image record for update
-            $lockedImage = ProductImage::where('id', $image->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $baseImages = ProductImage::where($fk, $productId)->lockForUpdate();
+            $baseCollection = (clone $baseImages)->get();
 
-            // Lock the owner record for update to prevent
-            $lockedProduct = $productModel::whereKey($owner->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $lockedImage = $baseCollection->firstWhere('id', $imageId);
 
-            $baseImages = ProductImage::where($productType.'_id', $lockedProduct->id)->lockForUpdate();
-
-            // Lock sibling images
-            $siblingImages = (clone $baseImages)->whereKeyNot($lockedImage->id);
-            $hasSiblings = (clone $siblingImages)->exists();
+            $hasSiblings = $baseCollection->count() > 1;
 
             // Store the old sort order and old public ID before deletion
             // Arrange sort orders of sibling images
@@ -259,30 +249,20 @@ class ProductImageService
             // If the image to be deleted is primary, assign the image with the lowest sort order as primary
             if ($hasSiblings) {
                 if ($lockedImage->is_primary) {
-                    $newPrimary = (clone $siblingImages)->orderBy('sort_order', 'asc')->value('sort_order') ?? 0;
+                    $newPrimary = $baseCollection->where('id', '!=', $imageId)->min('sort_order');
                     if ($newPrimary) {
-                        (clone $siblingImages)->where('sort_order', $newPrimary)->update(['is_primary' => true]);
+                        (clone $baseImages)->whereKeyNot($imageId)->where('sort_order', $newPrimary)->update(['is_primary' => true]);
                     }
                 }
 
-                // Get the last sort order among images
-                $lastOrder = (clone $baseImages)->orderByDesc('sort_order')->value('sort_order') ?? 0;
-
-                // Temporarily set the image's sort order to a value outside the current range to avoid unique constraint violations
-                $temp = $lastOrder + 1;
-                $lockedImage->update(['sort_order' => $temp]);
-
                 // Decrement sort orders of images with sort order greater than the deleted image's sort order
-                for ($i = $oldSortOrder + 1; $i <= $lastOrder; $i++) {
-                    (clone $siblingImages)->where('sort_order', $i)->decrement('sort_order');
-                }
+                (clone $baseImages)->where('sort_order', '>', $oldSortOrder)->decrement('sort_order');
             }
 
             // Delete the image record from the database
             $lockedImage->delete();
 
             DB::afterCommit(function () use ($oldPublicId) {
-
                 event(new ProductImageDeleted($oldPublicId));
                 // Delete the image from Cloudinary after the transaction commits
                 Cache::tags(['products', 'variants'])->flush();
