@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\ProductImageDeleted;
-use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Api\Admin\AdminApi;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Throwable;
@@ -33,10 +33,10 @@ class DeleteFromCloudinary implements ShouldQueue
     public function handle(ProductImageDeleted $event): void
     {
         try {
-            new UploadApi()->destroy($event->publicId, ['invalidate' => true]);
+            new AdminApi()->deleteAssets($event->publicIds, ['invalidate' => true]);
         } catch (Throwable $e) {
             logger()->warning("Couldn't delete image from cloudinary: ", [
-                'public_id' => $event->publicId,
+                'public_ids' => $event->publicIds,
                 'error' => $e->getMessage()]);
             throw $e;
         }

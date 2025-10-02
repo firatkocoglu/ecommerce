@@ -13,7 +13,7 @@ class ProductImageDeleted
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $publicId) // Cloudinary public ID of the deleted image
+    public function __construct(public array $publicIds) // Cloudinary public ID of the deleted image
     {}
 
     /**

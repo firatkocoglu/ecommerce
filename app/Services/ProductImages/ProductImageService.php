@@ -227,44 +227,59 @@ class ProductImageService
     /**
      * @throws Throwable
      */
-    public function delete(OwnerContext $owner, int $imageId): void
+    public function delete(OwnerContext $owner, array $imageIds): void
     {
         $productId = $owner->id;
         $fk = $owner->fk();
 
-        DB::transaction(function () use ($productId, $fk, $imageId) {
+        $ids = array_map('intval', array_unique($imageIds));
+        $found = ProductImage::where($fk, $productId)->whereIn('id', $ids)->pluck('id')->all();
+
+        if (count($found) !== count($ids)) {
+            throw ValidationException::withMessages(['image_ids' => 'One or more image IDs are invalid.']);
+        }
+
+        DB::transaction(function () use ($productId, $fk, $ids) {
             // Lock the image record for update
             $baseImages = ProductImage::where($fk, $productId)->lockForUpdate();
             $baseCollection = (clone $baseImages)->get();
 
-            $lockedImage = $baseCollection->firstWhere('id', $imageId);
+            // Get the images to be deleted
+            $lockedImages = $baseCollection->whereIn('id', $ids);
 
-            $hasSiblings = $baseCollection->count() > 1;
-
-            // Store the old sort order and old public ID before deletion
-            // Arrange sort orders of sibling images
-            $oldSortOrder = $lockedImage->sort_order;
-            $oldPublicId = $lockedImage->public_id;
-
-            // If the image to be deleted is primary, assign the image with the lowest sort order as primary
-            if ($hasSiblings) {
-                if ($lockedImage->is_primary) {
-                    $newPrimary = $baseCollection->where('id', '!=', $imageId)->min('sort_order');
-                    if ($newPrimary) {
-                        (clone $baseImages)->whereKeyNot($imageId)->where('sort_order', $newPrimary)->update(['is_primary' => true]);
-                    }
-                }
-
-                // Decrement sort orders of images with sort order greater than the deleted image's sort order
-                (clone $baseImages)->where('sort_order', '>', $oldSortOrder)->decrement('sort_order');
-            }
+            // Store the public IDs before deletion for Cloudinary cleanup
+            $oldPublicIds = $lockedImages->pluck('public_id')->all();
 
             // Delete the image record from the database
-            $lockedImage->delete();
+            (clone $baseImages)->whereIn('id', $ids)->delete();
 
-            DB::afterCommit(function () use ($oldPublicId) {
-                event(new ProductImageDeleted($oldPublicId));
+            // If not all the images are deleted, we may need to reorder and/or assign a new primary
+            if ($lockedImages->count() !== $baseCollection->count()) {
+                // If primary image is being deleted, assign another image as primary
+                if ($lockedImages->contains('is_primary', true)) {
+                    $newPrimary = $baseCollection->whereNotIn('id', $ids)->sortBy('sort_order')->value('id');
+                    (clone $baseImages)->where('id', $newPrimary)->update(['is_primary' => true]);
+                }
+
+                // Reorder the remaining images to ensure sequential sort_order values with using ROW_NUMBER()
+                $sql = "
+                    WITH survivors AS (
+                       SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order) AS rn
+                          FROM product_images
+                            WHERE {$fk} = :owner
+                    )
+                    UPDATE product_images AS i
+                    SET sort_order = s.rn
+                    FROM survivors AS s
+                    WHERE i.id = s.id
+                ";
+                // Reorder the remaining images
+                DB::statement($sql, ['owner' => $productId]);
+            }
+
+            DB::afterCommit(function () use ($oldPublicIds) {
                 // Delete the image from Cloudinary after the transaction commits
+                event(new ProductImageDeleted($oldPublicIds));
                 Cache::tags(['products', 'variants'])->flush();
             });
         });

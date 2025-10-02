@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\V1\ProductImages;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\V1\Images\DeleteImageRequest;
 use App\Http\Requests\API\V1\Images\StoreImageRequest;
 use App\Http\Requests\API\V1\Images\UpdateImageRequest;
 use App\Http\Resources\API\V1\Products\ProductImageResource;
@@ -72,11 +73,12 @@ class ProductImageApiController extends Controller
     /**
      * @throws Throwable
      */
-    public function destroy(int $productId, int $imageId): JsonResponse
+    public function destroy(int $productId, DeleteImageRequest $request): JsonResponse
     {
         $owner = new OwnerContext('product', $productId);
+        $imageIds = $request->validated('image_ids');
 
-        $this->service->delete($owner, $imageId);
+        $this->service->delete($owner, $imageIds);
 
         return response()->json(null, 204);
     }
@@ -84,11 +86,12 @@ class ProductImageApiController extends Controller
     /**
      * @throws Throwable
      */
-    public function destroyVariant(int $productId, int $variantId, int $imageId): JsonResponse
+    public function destroyVariant(int $productId, int $variantId, DeleteImageRequest $request): JsonResponse
     {
         $owner = new OwnerContext('variant', $variantId);
+        $imageIds = $request->validated('image_ids');
 
-        $this->service->delete($owner, $imageId);
+        $this->service->delete($owner, $imageIds);
 
         return response()->json(null, 204);
     }
