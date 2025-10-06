@@ -12,7 +12,11 @@ class Cart extends Model
     use HasFactory;
 
     protected $fillable = [
-        'session_id',
+        'user_id',
+        'cart_token',
+        'status',
+        'merged_into_cart_id',
+        'subtotal_gross',
         'expires_at',
     ];
 
