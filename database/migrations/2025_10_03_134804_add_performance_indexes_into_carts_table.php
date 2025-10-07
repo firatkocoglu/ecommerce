@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -19,10 +17,10 @@ return new class extends Migration
         );
 
         DB::statement(
-            "
+            '
             CREATE INDEX idx_carts_status_updated_at
             ON carts (status, updated_at);
-            "
+            '
         );
 
         // Ensure that active carts have either user_id or cart_token, but not both or neither
@@ -40,8 +38,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("DROP INDEX IF EXISTS idx_ux_carts_user_active");
-        DB::statement("DROP INDEX IF EXISTS idx_carts_status_updated_at");
-        DB::statement("ALTER TABLE carts DROP CONSTRAINT IF EXISTS active_carts_user_xor_cart_token");
+        DB::statement('DROP INDEX IF EXISTS idx_ux_carts_user_active');
+        DB::statement('DROP INDEX IF EXISTS idx_carts_status_updated_at');
+        DB::statement('ALTER TABLE carts DROP CONSTRAINT IF EXISTS active_carts_user_xor_cart_token');
     }
 };

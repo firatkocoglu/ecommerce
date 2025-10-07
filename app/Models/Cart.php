@@ -13,7 +13,7 @@ class Cart extends Model
 
     protected $fillable = [
         'user_id',
-        'cart_token',
+        'cart_token_hash',
         'status',
         'merged_into_cart_id',
         'subtotal_gross',
