@@ -2,11 +2,12 @@
 
 namespace App\Services\Carts;
 
+use App\Exceptions\OutOfStockException;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\User;
+use App\Services\Stocks\StockService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Random\RandomException;
@@ -14,6 +15,8 @@ use Throwable;
 
 class CartService
 {
+    public function __construct(private readonly StockService $stockService) {}
+
     public function findActiveByUser(int $userId): ?Cart
     {
         /**
@@ -95,16 +98,10 @@ class CartService
     public function addProductToCart(int $cartId, array $productData): Cart
     {
         /**
-         * Add a product to the cart with the specified quantity
-         * We're assuming $productData contains 'product_id', 'quantity' and 'product_variant_id' (if applicable)
+         * Add a product to the cart with quantity 1
+         * We're assuming $productData contains 'product_id', and 'product_variant_id' (if applicable)
          */
-        // Validate the quantity
-        $quantity = (int) $productData['quantity'];
-        if ($quantity <= 0) {
-            throw new Exception('Quantity must be a positive integer');
-        }
-
-        return DB::transaction(function () use ($cartId, $productData, $quantity) {
+        return DB::transaction(function () use ($cartId, $productData) {
             // Find the cart by ID and ensure it's active
             $cart = Cart::whereKey($cartId)->where('status', 'active')->first();
 
@@ -116,6 +113,7 @@ class CartService
             // Find the product by ID
             $product = Product::whereKey($productData['product_id'])->exists();
 
+            // If the product doesn't exist, throw an exception
             if (! $product) {
                 throw new Exception('Product not found');
             }
@@ -131,8 +129,29 @@ class CartService
                 throw new Exception('Product variant not found');
             }
 
+            // Check if the product (and variant, if applicable) is already in the cart
+            $cartItemQty = CartItem::where('cart_id', $cart->id)
+                ->where('product_id', $productData['product_id'])
+                ->when($dataHasVariant, function ($query) use ($productData) {
+                    return $query->where('product_variant_id', $productData['product_variant_id']);
+                }, function ($query) {
+                    return $query->whereNull('product_variant_id');
+                })
+                ->value('quantity') ?? 0;
+
+            // Check stock availability
+            $hasSufficientStock = $dataHasVariant
+                ? $this->stockService->hasSufficientStockForVariant($productData['product_variant_id'], $cartItemQty + 1)
+                : $this->stockService->hasSufficientStockForProduct($productData['product_id'], $cartItemQty + 1);
+
+            if (! $hasSufficientStock) {
+                throw new OutOfStockException('Insufficient stock for the requested product or variant');
+            }
+
             // Determine the unit price based on whether a variant is specified
-            $unitPrice = $dataHasVariant ? ProductVariant::whereKey($productData['product_variant_id'])->value('price') : Product::whereKey($productData['product_id'])->value('price');
+            $unitPrice = $dataHasVariant
+                ? ProductVariant::whereKey($productData['product_variant_id'])->value('price')
+                : Product::whereKey($productData['product_id'])->value('price');
 
             // If the unit price is not found, throw an exception
             if ($unitPrice === null) {
@@ -140,15 +159,15 @@ class CartService
             }
 
             // Calculate the line subtotal gross
-            $lineSubtotalGross = round((float) $unitPrice * $quantity, 2);
+            $lineSubtotalGross = round((float) $unitPrice * ($cartItemQty + 1), 2);
 
             // Upsert the product into the cart with the specified quantity
             $upsertQuery = '
-            INSERT INTO cart_items (cart_id, product_id, product_variant_id, quantity, unit_gross_price, line_subtotal_gross, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO cart_items (cart_id, product_id, product_variant_id, unit_gross_price, line_subtotal_gross, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
             ON CONFLICT (cart_id, product_id, variant_key)
-            DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity,
-                        line_subtotal_gross = cart_items.unit_gross_price * (cart_items.quantity + EXCLUDED.quantity),
+            DO UPDATE SET quantity = cart_items.quantity + 1,
+                        line_subtotal_gross = cart_items.unit_gross_price * (cart_items.quantity + 1),
                         updated_at = NOW()
             ';
 
@@ -156,7 +175,6 @@ class CartService
                 $cart->id,
                 $productData['product_id'],
                 $dataHasVariant ? $productData['product_variant_id'] : null,
-                $quantity,
                 $unitPrice,
                 $lineSubtotalGross,
             ]);
@@ -184,6 +202,17 @@ class CartService
                 ->where('cart_id', $cartId)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            // Check stock availability depending on whether it's a product or variant
+            $itemType = $cartItem->product_variant_id ? 'variant' : 'product';
+            $hasSufficientStock = $itemType === 'variant'
+                ? $this->stockService->hasSufficientStockForVariant($cartItem->product_variant_id, $cartItem->quantity + 1)
+                : $this->stockService->hasSufficientStockForProduct($cartItem->product_id, $cartItem->quantity + 1);
+
+            // If there's not enough stock, throw an exception
+            if (! $hasSufficientStock) {
+                throw new OutOfStockException('Insufficient stock for the requested product or variant');
+            }
 
             $cartItem->quantity += 1;
             $cartItem->line_subtotal_gross = round($cartItem->unit_gross_price * ($cartItem->quantity), 2);
