@@ -11,7 +11,13 @@ class CartItem extends Model
     use HasFactory;
 
     protected $fillable = [
+        'product_id',
+        'product_variant_id',
+        'variant_key',
         'quantity',
+        'unit_gross_price',
+        'line_subtotal_gross',
+        'cart_id',
     ];
 
     public function cart(): BelongsTo

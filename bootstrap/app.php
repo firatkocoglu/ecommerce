@@ -31,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleCors::class,
         ]);
 
-        $middleware->group('spa', [
+        $middleware->group('web', [
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             StartSession::class,

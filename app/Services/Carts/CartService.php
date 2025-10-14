@@ -23,7 +23,7 @@ class CartService
          * Find an active cart for a given user ID
          * Returns null if no active cart is found
          */
-        return Cart::where('user_id', $userId)->where('status', 'active')->first();
+        return Cart::where('user_id', $userId)->where('status', 'active')->lockForUpdate()->first();
     }
 
     public function findActiveByTokenHash(string $hash): ?Cart
@@ -32,7 +32,7 @@ class CartService
          * Find an active cart for a given cart token
          * Returns null if no active cart is found
          */
-        return Cart::where('cart_token_hash', $hash)->where('status', 'active')->first();
+        return Cart::where('cart_token_hash', $hash)->where('status', 'active')->lockForUpdate()->first();
     }
 
     /**
@@ -317,13 +317,12 @@ class CartService
             ->firstOrFail();
     }
 
-    public function getGuestCart(int $cartId, string $hash): Cart
+    public function getGuestCart(string $hash): Cart
     {
-        return Cart::whereKey($cartId)
-            ->where('cart_token_hash', $hash)
+        return Cart::where('cart_token_hash', $hash)
             ->where('expires_at', '>', now())
             ->where('status', 'active')
-            ->with(['items:id,cart_id,product_id,product_variant_id,quantity,unit_gross_price,line_subtotal_gross,created_at'])
+            ->with(['items:id,cart_id,product_id,product_variant_id,variant_key,quantity,unit_gross_price,line_subtotal_gross,created_at'])
             ->firstOrFail();
     }
 

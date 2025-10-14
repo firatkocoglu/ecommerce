@@ -18,10 +18,10 @@ class CartItemResource extends JsonResource
             'id' => $this->id,
             'cart_id' => $this->cart_id,
             'product_id' => $this->product_id,
-            'variant_key' => $this->variant_key,
+            'product_variant_id' => $this->product_variant_id,
             'quantity' => $this->quantity,
-            'unit_price_gross' => $this->unit_price_gross,
-            'line_total_gross' => $this->line_total_gross,
+            'unit_gross_price' => $this->unit_gross_price,
+            'line_subtotal_gross' => $this->line_subtotal_gross,
         ];
     }
 }

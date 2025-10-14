@@ -47,11 +47,6 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function stock(): HasOne
-    {
-        return $this->hasOne(Stock::class);
-    }
-
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class, 'product_variant_id')->whereNull('product_id');
@@ -90,5 +85,10 @@ class ProductVariant extends Model
     public function coverImage(): HasOne
     {
         return $this->hasOne(ProductImage::class, 'product_variant_id')->whereNull('product_id')->orderByDesc('is_primary')->orderBy('sort_order');
+    }
+
+    public function stock(): HasOne
+    {
+        return $this->hasOne(Stock::class, 'product_variant_id');
     }
 }

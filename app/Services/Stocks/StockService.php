@@ -2,8 +2,6 @@
 
 namespace App\Services\Stocks;
 
-use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Models\Stock;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +26,7 @@ class StockService
             ->whereNull('product_variant_id')
             ->value('quantity');
 
-        return (int)($stock ?? 0) >= $requiredQuantity;
+        return (int) ($stock ?? 0) >= $requiredQuantity;
     }
 
     public function hasSufficientStockForVariant(int $variantId, int $requiredQuantity): bool
@@ -36,7 +34,7 @@ class StockService
         $stock = Stock::where('product_variant_id', $variantId)
             ->value('quantity');
 
-        return (int)($stock ?? 0) >= $requiredQuantity;
+        return (int) ($stock ?? 0) >= $requiredQuantity;
 
     }
 
@@ -75,7 +73,7 @@ class StockService
             UPDATE stocks SET quantity = quantity - ?
             WHERE product_variant_id = ?
             AND quantity >= ?',
-        [$quantity, $variantId, $quantity]
+            [$quantity, $variantId, $quantity]
         );
 
         if ($affected !== 1) {
