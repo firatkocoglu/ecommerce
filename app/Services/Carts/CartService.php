@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Random\RandomException;
 use Throwable;
 
-class CartService
+readonly class CartService
 {
-    public function __construct(private readonly StockService $stockService) {}
+    public function __construct(private StockService $stockService) {}
 
     public function findActiveByUser(int $userId): ?Cart
     {
@@ -297,7 +297,7 @@ class CartService
          */
         DB::transaction(function () use ($cartId) {
             // Find the cart to ensure it exists and is active
-            $cart = Cart::whereKey($cartId)->where('status', 'active')->firstOrFail();
+            Cart::whereKey($cartId)->where('status', 'active')->firstOrFail();
 
             // Delete all cart items for the given cart ID
             CartItem::where('cart_id', $cartId)->delete();
