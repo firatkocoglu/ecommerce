@@ -45,6 +45,10 @@ class StoreVariantRequest extends FormRequest
             'images.*.url' => ['required_with:images', 'string', 'max:2048', 'url'],
             'images.*.is_primary' => ['nullable', 'boolean'],
             'images.*.sort_order' => ['nullable', 'integer', 'min:0'],
+
+            // Stock management
+            'track_stock' => ['nullable', 'boolean'],
+            'allow_backorder' => ['nullable', 'boolean'],
         ];
     }
 

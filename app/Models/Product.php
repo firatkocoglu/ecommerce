@@ -20,6 +20,8 @@ class Product extends Model
         'status',
         'price',
         'weight',
+        'track_stock',
+        'allow_backorder',
     ];
 
     protected $casts = [

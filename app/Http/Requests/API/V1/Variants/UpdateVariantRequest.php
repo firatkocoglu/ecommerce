@@ -43,6 +43,10 @@ class UpdateVariantRequest extends FormRequest
             'images.*.url' => ['sometimes', 'nullable', 'string', 'max:2048', 'url'],
             'images.*.is_primary' => ['sometimes', 'nullable', 'boolean'],
             'images.*.sort_order' => ['sometimes', 'nullable', 'integer', 'min:0'],
+
+            // Stock management
+            'track_stock' => ['sometimes', 'nullable', 'boolean'],
+            'allow_backorder' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 

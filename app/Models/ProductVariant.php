@@ -21,6 +21,8 @@ class ProductVariant extends Model
         'sku',
         'status',
         'product_id',
+        'track_stock',
+        'allow_backorder',
     ];
 
     protected $casts = [

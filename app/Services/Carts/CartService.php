@@ -111,23 +111,13 @@ readonly class CartService
             }
 
             // Find the product by ID
-            $product = Product::whereKey($productData['product_id'])->exists();
-
-            // If the product doesn't exist, throw an exception
-            if (! $product) {
-                throw new Exception('Product not found');
-            }
+            $product = Product::whereKey($productData['product_id'])->firstOrFail();
 
             // Check if the product_variant_id is provided in the request data
             $dataHasVariant = array_key_exists('product_variant_id', $productData) && ! is_null($productData['product_variant_id']);
 
             // If product_variant_id is provided, check if the variant exists and belongs to the given product
-            $variant = $dataHasVariant ? ProductVariant::whereKey($productData['product_variant_id'])->where('product_id', $productData['product_id'])->exists() : null;
-
-            // If the product_variant_id is provided but the variant does not exist with given ID or the variant does not belong to given product, throw an exception
-            if ($dataHasVariant && ! $variant) {
-                throw new Exception('Product variant not found');
-            }
+            $variant = $dataHasVariant ? ProductVariant::whereKey($productData['product_variant_id'])->where('product_id', $productData['product_id'])->firstOrFail() : null;
 
             // Check if the product (and variant, if applicable) is already in the cart
             $cartItemQty = CartItem::where('cart_id', $cart->id)
@@ -148,23 +138,23 @@ readonly class CartService
                 throw new OutOfStockException('Insufficient stock for the requested product or variant');
             }
 
+            // Define product name
+            $name = $dataHasVariant
+                ? $product->name.' - '.$variant->sku
+                : $product->name;
+
             // Determine the unit price based on whether a variant is specified
             $unitPrice = $dataHasVariant
-                ? ProductVariant::whereKey($productData['product_variant_id'])->value('price')
-                : Product::whereKey($productData['product_id'])->value('price');
-
-            // If the unit price is not found, throw an exception
-            if ($unitPrice === null) {
-                throw new Exception('Product price not found');
-            }
+                ? $variant->price
+                : $product->price;
 
             // Calculate the line subtotal gross
             $lineSubtotalGross = round((float) $unitPrice * ($cartItemQty + 1), 2);
 
             // Upsert the product into the cart with the specified quantity
             $upsertQuery = '
-            INSERT INTO cart_items (cart_id, product_id, product_variant_id, unit_gross_price, line_subtotal_gross, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO cart_items (cart_id, product_id, product_variant_id, unit_gross_price, line_subtotal_gross, created_at, updated_at, name)
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW(), ?)
             ON CONFLICT (cart_id, product_id, variant_key)
             DO UPDATE SET quantity = cart_items.quantity + 1,
                         line_subtotal_gross = cart_items.unit_gross_price * (cart_items.quantity + 1),
@@ -177,6 +167,7 @@ readonly class CartService
                 $dataHasVariant ? $productData['product_variant_id'] : null,
                 $unitPrice,
                 $lineSubtotalGross,
+                $name,
             ]);
 
             // Update the cart's subtotal_gross

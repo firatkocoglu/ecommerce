@@ -59,6 +59,10 @@ class UpdateProductRequest extends FormRequest
             'images.*.url' => ['sometimes', 'required_with:images', 'string', 'url', 'max:2048'],
             'images.*.is_primary' => ['sometimes', 'nullable', 'boolean'],
             'images.*.sort_order' => ['sometimes', 'nullable', 'integer', 'min:0'],
+
+            // Stock management
+            'track_stock' => ['sometimes', 'nullable', 'boolean'],
+            'allow_backorder' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 
