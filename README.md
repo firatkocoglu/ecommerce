@@ -1,6 +1,6 @@
 ## 📘 Documentation
 Detailed project documentation & roadmap is available on Notion:  
-👉 [Laravel E-Commerce MVP – Notion Page](https://notion.so/firatkocoglu/Laravel-Ecommerce-MVP-a12bc345d678)
+👉 [Laravel E-Commerce MVP – Notion Page]([https://notion.so/firatkocoglu/Laravel-Ecommerce-MVP-a12bc345d678](https://www.notion.so/Laravel-E-Commerce-MVP-2960fe48dd9880bd86f3c9bec663ccd1?source=copy_link))
 
 ### 🛒 Laravel + Next.js E-Commerce App
 
