@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\V1\Addresses\AddressController;
 use App\Http\Controllers\API\V1\Carts\CartController;
 use App\Http\Controllers\Auth\APIAuth\AuthController;
 use App\Http\Controllers\Auth\APIAuth\EmailVerificationController;
@@ -26,6 +27,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             // Authenticated user endpoints
             Route::get('/me', [AuthController::class, 'me'])->name('me');
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+            // Address endpoints for authenticated users
+            Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
+            Route::get('/addresses/{addressId}', [AddressController::class, 'show'])->name('addresses.show');
+            Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+            Route::match(['put', 'patch'], '/addresses/{addressId}', [AddressController::class, 'update'])->name('addresses.update');
+            Route::delete('/addresses/clear', [AddressController::class, 'clearAll'])->name('addresses.clear');
+            Route::delete('/addresses/{addressId}', [AddressController::class, 'destroy'])->name('addresses.destroy');
+            Route::patch('/addresses/{addressId}/set-default', [AddressController::class, 'toggleDefault'])->name('addresses.setDefault');
 
             // Cart endpoints for authenticated users
             Route::get('/cart', [CartController::class, 'show'])->name('cart.user.show');

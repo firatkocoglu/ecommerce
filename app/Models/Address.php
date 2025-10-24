@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Address extends Model
 {
     use HasFactory;
-
     //
     protected $fillable = [
+        'user_id',
+        'type',
         'label',
         'is_default',
         'street',

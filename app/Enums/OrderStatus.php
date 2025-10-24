@@ -12,6 +12,8 @@ enum OrderStatus: string
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
 
+    case RETURN_REQUESTED = 'return_requested';
+
     public function label(): string
     {
         return match ($this) {
@@ -21,6 +23,7 @@ enum OrderStatus: string
             self::PAID => 'Paid',
             self::COMPLETED => 'Completed',
             self::CANCELLED => 'Cancelled',
+            self::RETURN_REQUESTED => 'Return Request Submitted',
         };
     }
 }

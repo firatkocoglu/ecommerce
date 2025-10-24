@@ -101,7 +101,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Global "From" Address
+    | Global "From" Addresses
     |--------------------------------------------------------------------------
     |
     | You may wish for all emails sent by your application to be sent from

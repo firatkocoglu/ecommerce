@@ -195,11 +195,8 @@ readonly class OrderService
                     'status' => OrderStatus::CANCELLED->value,
                     'cancelled_at' => NOW(),
                 ]);
-            }
-
-            if ($order->status === OrderStatus::PAID->value || $order->status === OrderStatus::SHIPPED->value || $order->status === OrderStatus::COMPLETED->value)  {
-                // For paid, shipped, or completed orders, initiate refund process
-                // This is a placeholder for refund logic
+            } else {
+                abort(422, 'Only pending, processing, or failed orders can be cancelled.');
             }
         });
     }

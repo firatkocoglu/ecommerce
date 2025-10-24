@@ -6,7 +6,7 @@ use App\Models\Address;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class AddressServices
+class AddressService
 {
     public function listForUser(int $userId)
     {
@@ -33,7 +33,7 @@ class AddressServices
         return DB::transaction(function () use ($userId, $addressData) {
             // Logic to create a new address for a user
             $isDefault = (bool)($addressData['is_default'] ?? false);
-            $addressType = $addressData['address_type'] ?? 'shipping';
+            $addressType = $addressData['type'];
 
             // If is_default is true, unset other default addresses of the same type
             if ($isDefault === true) {
@@ -46,7 +46,7 @@ class AddressServices
             $addressData['user_id'] = $userId;
             $created = Address::create($addressData);
 
-            if ($isDefault !== true) {
+            if ($isDefault === false) {
                 $existingDefault = Address::where('user_id', $userId)
                     ->where('type', $addressType)
                     ->where('is_default', true)
@@ -136,18 +136,17 @@ class AddressServices
     /**
      * @throws Throwable
      */
-    public function setDefault(int $userId, int $addressId, string $type): null|Address
+    public function setDefault(int $userId, int $addressId): null|Address
     {
         // Logic to set an address as the default for a user
-        return DB::transaction(function () use ($userId, $addressId, $type) {
+        return DB::transaction(function () use ($userId, $addressId) {
             $address = Address::whereKey($addressId)
                 ->where('user_id', $userId)
-                ->where('type', $type)
                 ->lockForUpdate()
                 ->firstOrFail();
 
             $existingDefault = Address::where('user_id', $userId)
-                ->where('type', $type)
+                ->where('type', $address->type)
                 ->where('id', '!=', $addressId)
                 ->where('is_default', true)
                 ->first();
@@ -163,5 +162,11 @@ class AddressServices
             return $address->refresh();
         });
 
+    }
+
+    public function clearAddressesForUser(int $userId): void
+    {
+        // Logic to delete all addresses for a specific user
+        Address::where('user_id', $userId)->delete();
     }
 }
