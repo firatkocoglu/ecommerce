@@ -1,11 +1,13 @@
-⸻
+## 📘 Documentation
+Detailed project documentation & roadmap is available on Notion:  
+👉 [Laravel E-Commerce MVP – Notion Page](https://www.notion.so/Laravel-E-Commerce-MVP-2960fe48dd9880bd86f3c9bec663ccd1?source=copy_link)
 
-🛒 Laravel + Vue + Inertia E-Commerce App
+### 🛒 Laravel + Next.js E-Commerce App
 
-A modern full-stack e-commerce application built with Laravel 12, Vue 3, and Inertia.js.
+A modern full-stack e-commerce application built with Laravel 12, Next.
 This project demonstrates scalable architecture, clean code practices, and real-world features commonly needed in production-grade applications.
 
-🚀 Features
+#🚀 Features
 •	🔐 Authentication & Authorization (Laravel Breeze, Spatie Permissions for RBAC)
 
 •	📦 Product Management (CRUD, categories, inventory, pagination)
@@ -22,13 +24,13 @@ This project demonstrates scalable architecture, clean code practices, and real-
 
 •	📝 Unit & Feature Tests with PHPUnit
 
-•	📊 Admin Dashboard (Vue + Inertia) with product, order, and customer insights
+•	📊 Admin Dashboard (Blade) with product, order, and customer insights
 
 •	🌐 Storefront with Next.js (SEO-friendly, SSR/SSG)
 
 ⸻
 
-🏗️ Tech Stack
+#🏗️ Tech Stack
 
 Backend
 •	Laravel 12 (PHP 8.2+)
@@ -89,7 +91,5 @@ npm run dev
 ### Running tests
 php artisan test
 
-## 👨‍💻 Author
-
-Developed by Fırat Koçoğlu
-For freelancing and collaboration inquiries, feel free to connect!
+### 👨‍💻 Author
+Fırat Koçoğlu Software Engineer • .NET & Laravel Developer 📎 [GitHub](https://github.com/firatkocoglu) | [LinkedIn](https://linkedin.com/in/firatkocoglu)
