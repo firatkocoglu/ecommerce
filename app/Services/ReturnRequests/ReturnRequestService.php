@@ -4,7 +4,10 @@ namespace App\Services\ReturnRequests;
 
 use App\Models\Order;
 use App\Models\ReturnRequest;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use JsonException;
+use LaravelIdea\Helper\App\Models\_IH_ReturnRequest_C;
 use Throwable;
 
 class ReturnRequestService
@@ -59,37 +62,96 @@ class ReturnRequestService
     }
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      */
     private function attachOrderItemsToReturnRequest(ReturnRequest $returnRequest, array $orderItems): void
-        {
-            $jsonOrderItems = json_encode($orderItems, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    {
+        $jsonOrderItems = json_encode($orderItems, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
 
-            $query = "
-                INSERT INTO return_request_items (return_request_id, order_item_id, quantity, condition, evidence_urls, created_at, updated_at)
-                SELECT
-                    :return_request_id,
-                    oi.id,
-                    oi.quantity,
-                    'new',
-                    '[]',
-                    NOW(),
-                    NOW()
-                FROM json_to_recordset(:json_order_items) AS oi(id INT, quantity INT)
-                ON CONFLICT (return_request_id, order_item_id) DO UPDATE SET
-                    quantity = return_request_items.quantity + EXCLUDED.quantity;
+        $query = "
+            INSERT INTO return_request_items (return_request_id, order_item_id, quantity, condition, evidence_urls, created_at, updated_at)
+            SELECT
+                :return_request_id,
+                oi.id,
+                oi.quantity,
+                'new',
+                '[]',
+                NOW(),
+                NOW()
+            FROM json_to_recordset(:json_order_items) AS oi(id INT, quantity INT)
+            ON CONFLICT (return_request_id, order_item_id) DO UPDATE SET
+                quantity = return_request_items.quantity + EXCLUDED.quantity;
             ";
 
-            DB::statement($query, [
-                'return_request_id' => $returnRequest->id,
-                'json_order_items' => $jsonOrderItems,
-            ]);
-        }
+        DB::statement($query, [
+            'return_request_id' => $returnRequest->id,
+            'json_order_items' => $jsonOrderItems,
+        ]);
+    }
+
+    public function listReturnRequestsByUser(int $userId): Collection
+    {
+        return ReturnRequest::where('user_id', $userId)
+            ->with('items')
+            ->orderBy('requested_at', 'desc')
+            ->get();
+    }
+
+    public function getReturnRequestByUser(int $userId, int $returnRequestId): ?ReturnRequest
+    {
+        return ReturnRequest::where('user_id', $userId)
+            ->where('id', $returnRequestId)
+            ->with('items')
+            ->firstOrFail();
+    }
 
 
-        // Simulate return request creation
+    public function adminListReturnRequests(): _IH_ReturnRequest_C
+    {
+        return ReturnRequest::with('items')
+            ->orderBy('requested_at', 'desc')
+            ->get();
+    }
 
+    public function deleteReturnRequest(int $userId, int $returnRequestId): void
+    {
+        // User can only delete their own pending return requests
+        $returnRequest = ReturnRequest::where('user_id', $userId)
+            ->where('id', $returnRequestId)
+            ->where('status', 'pending')
+            ->firstOrFail();
 
+        $returnRequest->delete();
+    }
 
+    public function adminDeleteReturnRequest(int $returnRequestId): void
+    {
+        $returnRequest = ReturnRequest::where('id', $returnRequestId)->firstOrFail();
+        $returnRequest->delete();
+    }
+
+    public function adminApproveReturnRequest(int $returnRequestId, int $adminId): void
+    {
+        $returnRequest = ReturnRequest::where('id', $returnRequestId)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $returnRequest->status = 'approved';
+        $returnRequest->admin_id = $adminId;
+        $returnRequest->approved_at = now();
+        $returnRequest->save();
+    }
+
+    public function adminRejectReturnRequest(int $returnRequestId, int $adminId, string $reason): void
+    {
+        $returnRequest = ReturnRequest::where('id', $returnRequestId)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $returnRequest->status = 'rejected';
+        $returnRequest->admin_id = $adminId;
+        $returnRequest->notes = $reason;
+        $returnRequest->rejected_at = now();
+        $returnRequest->save();
     }
 }
