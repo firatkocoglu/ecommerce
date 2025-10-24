@@ -91,7 +91,5 @@ npm run dev
 ### Running tests
 php artisan test
 
-## 👨‍💻 Author
-
-Developed by Fırat Koçoğlu
-For freelancing and collaboration inquiries, feel free to connect!
+### 👨‍💻 Author
+Fırat Koçoğlu Software Engineer • .NET & Laravel Developer 📎 [GitHub](https://github.com/firatkocoglu) | [LinkedIn](https://linkedin.com/in/firatkocoglu)
