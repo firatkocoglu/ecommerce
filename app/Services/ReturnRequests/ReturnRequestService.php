@@ -3,8 +3,10 @@
 namespace App\Services\ReturnRequests;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\ReturnRequest;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use JsonException;
 use LaravelIdea\Helper\App\Models\_IH_ReturnRequest_C;
@@ -22,25 +24,32 @@ class ReturnRequestService
 
         $userId = $data['user_id'];
         $orderId = $data['order_id'];
+        $orderItems = $data['order_items'] ?? []; // expected : [['id' => int, 'quantity' => int], ...]
         $reason = $data['reason'] ?? 'No reason provided';
 
-        return DB::transaction(function () use ($userId, $orderId, $reason) {
+        return DB::transaction(function () use ($userId, $orderId, $orderItems, $reason) {
+            if (empty($orderItems)) {
+                throw new \Exception('You need to specify at least one item to return.');
+            }
+
             // Check if the order belongs to the user and is eligible for return
             $order = Order::where('id', $orderId)
                 ->where('user_id', $userId)
-                ->where('fulfilled_at', '>=', now()->subDays(14))
+                ->whereIn('status', ['paid', 'shipped', 'completed'])
                 ->firstOrFail();
 
-            // Obtain order items
-            $orderItems = $order->items;
+            if ($order->fulfilled_at?->diffInDays(now()) > 14) {
+                throw new \Exception('The order is no longer eligible for return (exceeded 14 days from fulfillment).');
+            }
 
             // Check if a return request already exists for this order
             $existingRequest = ReturnRequest::where('order_id', $orderId)
                 ->where('user_id', $userId)
+                ->where('status', 'pending')
                 ->first();
 
             if ($existingRequest) {
-                throw new \Exception('A return request for this order already exists.');
+                throw new \Exception('A pending return request for this order already exists.');
             }
 
             $created = ReturnRequest::create([
@@ -51,14 +60,51 @@ class ReturnRequestService
                 'requested_at' => now(),
             ]);
 
-            // Link order items to the return request
-            if (empty($orderItemIds)) {
-                throw new \Exception('No order items specified for return.');
-            }
-            $this->attachOrderItemsToReturnRequest($created, $orderItems);
+            // Validate and normalize order items
+            $normalizedItems = $this->validateAndNormalizeOrderItems($order, $orderItems);
+
+            // Attach order items to the return request
+            $this->attachOrderItemsToReturnRequest($created, $normalizedItems);
 
             return $created->refresh();
         });
+    }
+
+    private function validateAndNormalizeOrderItems(Order $order, array $orderItems): array
+    {
+        // Get all order items by their IDs for quick lookup
+        $allOrderItemsById = $order->items->keyBy('id');
+
+        $normalizedItems = [];
+
+        // Validate each item
+        foreach ($orderItems as $item) {
+            // If id or quantity is missing or invalid
+            if (!isset($item['id']) || !isset($item['quantity'])
+                || !is_numeric($item['quantity']) || $item['quantity'] <= 0
+                || !is_numeric($item['id']) || $item['id'] <= 0) {
+                throw new \InvalidArgumentException('Return requests must have items.');
+            }
+
+            // Check if the item exists in the order
+            if (!$allOrderItemsById->has($item['id'])) {
+                throw new \InvalidArgumentException("Order item does not exist in the order.");
+            }
+
+            // Check if the item already exists in normalized items to aggregate quantity
+            if (in_array($item['id'], array_column($normalizedItems, 'id'))) {
+                $index = array_search($item['id'], array_column($normalizedItems, 'id'));
+                $normalizedItems[$index]['quantity'] += (int)$item['quantity'];
+                continue;
+            }
+
+            // Add item id and quantity to normalized items
+            $normalizedItems[] = [
+                'id' => (int)$item['id'],
+                'quantity' => (int)$item['quantity'],
+            ];
+        }
+        return $normalizedItems;
     }
 
     /**
@@ -79,8 +125,10 @@ class ReturnRequestService
                 NOW(),
                 NOW()
             FROM json_to_recordset(:json_order_items) AS oi(id INT, quantity INT)
-            ON CONFLICT (return_request_id, order_item_id) DO UPDATE SET
-                quantity = return_request_items.quantity + EXCLUDED.quantity;
+            ON CONFLICT (return_request_id, order_item_id)
+                DO UPDATE SET
+                quantity = return_request_items.quantity + EXCLUDED.quantity,
+                updated_at = NOW();
             ";
 
         DB::statement($query, [
@@ -97,20 +145,12 @@ class ReturnRequestService
             ->get();
     }
 
-    public function getReturnRequestByUser(int $userId, int $returnRequestId): ?ReturnRequest
+    public function getReturnRequestByUser(int $userId, int $returnRequestId): ReturnRequest
     {
         return ReturnRequest::where('user_id', $userId)
             ->where('id', $returnRequestId)
             ->with('items')
             ->firstOrFail();
-    }
-
-
-    public function adminListReturnRequests(): _IH_ReturnRequest_C
-    {
-        return ReturnRequest::with('items')
-            ->orderBy('requested_at', 'desc')
-            ->get();
     }
 
     public function deleteReturnRequest(int $userId, int $returnRequestId): void
@@ -122,6 +162,21 @@ class ReturnRequestService
             ->firstOrFail();
 
         $returnRequest->delete();
+    }
+
+
+    public function adminListReturnRequests(): Collection
+    {
+        return ReturnRequest::with('items')
+            ->orderBy('requested_at', 'desc')
+            ->get();
+    }
+
+    public function adminGetReturnRequest(int $returnRequestId): ReturnRequest
+    {
+        return ReturnRequest::where('id', $returnRequestId)
+            ->with('items')
+            ->firstOrFail();
     }
 
     public function adminDeleteReturnRequest(int $returnRequestId): void
