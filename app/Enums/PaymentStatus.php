@@ -5,6 +5,8 @@ namespace App\Enums;
 enum PaymentStatus: string
 {
     case Pending = 'pending';
+    case RequiresPaymentMethod = 'requires_payment_method';
+    case RequiresConfirmation = 'requires_confirmation';
     case Completed = 'completed';
     case Failed = 'failed';
 

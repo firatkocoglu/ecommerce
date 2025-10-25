@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\V1\Addresses\AddressController;
 use App\Http\Controllers\API\V1\Carts\CartController;
+use App\Http\Controllers\API\V1\Payments\PaymentController;
 use App\Http\Controllers\Auth\APIAuth\AuthController;
 use App\Http\Controllers\Auth\APIAuth\EmailVerificationController;
 use App\Http\Controllers\Auth\APIAuth\PasswordResetController;
@@ -45,6 +46,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::delete('/cart/clear', [CartController::class, 'clearCart'])->name('cart.user.clear');
             Route::match(['put', 'patch'], '/cart/increase-quantity', [CartController::class, 'increaseItemQuantity'])->name('cart.user.update');
             Route::match(['put', 'patch'], '/cart/decrease-quantity', [CartController::class, 'decreaseItemQuantity'])->name('cart.user.update');
+
+            // Payment endpoints for authenticated users
+            Route::post('/payments/create-intent', [PaymentController::class, 'createPaymentIntent'])->name('payments.createIntent');
         });
     });
 });

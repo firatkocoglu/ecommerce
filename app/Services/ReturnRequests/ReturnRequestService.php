@@ -185,16 +185,25 @@ class ReturnRequestService
         $returnRequest->delete();
     }
 
+    /**
+     * @throws Throwable
+     */
     public function adminApproveReturnRequest(int $returnRequestId, int $adminId): void
     {
-        $returnRequest = ReturnRequest::where('id', $returnRequestId)
-            ->where('status', 'pending')
-            ->firstOrFail();
+        DB::transaction(function () use ($returnRequestId, $adminId) {
+            $returnRequest = ReturnRequest::where('id', $returnRequestId)
+                ->where('status', 'pending')
+                ->firstOrFail();
 
-        $returnRequest->status = 'approved';
-        $returnRequest->admin_id = $adminId;
-        $returnRequest->approved_at = now();
-        $returnRequest->save();
+            // Calculate refund amount
+            $refundData = $this->calculateRefundAmount($returnRequest);
+
+            $returnRequest->status = 'approved';
+            $returnRequest->admin_id = $adminId;
+            $returnRequest->approved_at = now();
+            $returnRequest->save();
+
+        });
     }
 
     public function adminRejectReturnRequest(int $returnRequestId, int $adminId, string $reason): void
@@ -208,5 +217,22 @@ class ReturnRequestService
         $returnRequest->notes = $reason;
         $returnRequest->rejected_at = now();
         $returnRequest->save();
+    }
+
+    private function calculateRefundAmount(ReturnRequest $returnRequest): float
+    {
+        $query =
+            "SELECT COALESCE(SUM(ROUND(oi.unit_price * rri.quantity, 2)), 0) AS refund_amount,
+            o.currency_code
+            FROM return_request_items rri
+            JOIN order_items oi On rri.order_item_id = oi.id
+            JOIN orders o ON o.id = oi.order_id
+            WHERE rri.return_request_id = :return_request_id
+            AND oi.order_id = (SELECT order_id FROM return_requests WHERE id = :return_request_id);
+            ";
+
+        return DB::selectOne($query, [
+            'return_request_id' => $returnRequest->id,
+        ]);
     }
 }

@@ -18,7 +18,8 @@
         "laravel/telescope": "^5.12",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^3.2",
-        "spatie/laravel-permission": "^6.21"
+        "spatie/laravel-permission": "^6.21",
+        "stripe/stripe-php": "^18.0"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",
