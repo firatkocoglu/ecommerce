@@ -42,6 +42,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'telescope/*',
+            'stripe_event_webhook',
+            'stripe/*',
+            'webhooks/stripe',
         ]);
 
         $middleware->alias([

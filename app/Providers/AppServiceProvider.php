@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\LazyLoadingViolationException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
+use Meilisearch\Client;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,6 +50,26 @@ class AppServiceProvider extends ServiceProvider
                 'sql' => $q->sql,
                 'bindings' => $q->bindings,
             ]);
+        });
+
+        // Configure Meilisearch index settings with caching
+        Cache::rememberForever('meili_products_index_settings_v1', function () {
+           $host = config('scout.meilisearch.host');
+           $key = config('scout.meilisearch.key');
+
+            if (! $host){
+                return true; // Skip if no meili is configured
+            }
+
+            $client = new Client($host, $key);
+            $index = $client->index('products');
+
+            $index->updateSettings([
+                'filterableAttributes' => ['category', 'name', 'status', 'variant_colors', 'variant_sizes', 'min_price', 'max_price'],
+                'sortableAttributes' => ['price', 'min_price', 'max_price', 'name'],
+            ]);
+
+            return true;
         });
     }
 }

@@ -12,13 +12,21 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'amount',
+        'user_id',
+        'order_id',
+        'grand_total',
         'payment_method',
         'status',
-        'currency',
+        'currency_code',
         'transaction_id',
         'gateway',
         'paid_at',
+        'idempotency_key',
+        'provider_event_id',
+        'provider_payload',
+        'fee_amount',
+        'net_amount',
+        'exchange_rate',
     ];
 
     protected $appends = [
@@ -29,6 +37,7 @@ class Payment extends Model
         'paid_at' => 'datetime',
         'payment_method' => PaymentMethod::class,
         'status' => PaymentStatus::class,
+        'provider_payload' => 'array',
     ];
 
     public function order()

@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use App\Enums\ProductStatus;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
 
     protected $fillable = [
         'name',
@@ -28,17 +30,20 @@ class Product extends Model
         'status' => ProductStatus::class,
     ];
 
-    public function scopeActive($query)
+    #[Scope]
+    protected function active($query)
     {
         return $query->where('status', ProductStatus::Active->value);
     }
 
-    public function scopeDraft($query)
+    #[Scope]
+    protected function draft($query)
     {
         return $query->where('status', ProductStatus::Draft->value);
     }
 
-    public function scopeArchived($query)
+    #[Scope]
+    protected function archived($query)
     {
         return $query->where('status', ProductStatus::Archived->value);
     }
@@ -65,7 +70,7 @@ class Product extends Model
             return $this->primaryImage;
         }
 
-        if ($this->relationLoaded('primaryImage') && ! $this->primaryImage) {
+        if ($this->relationLoaded('primaryImage') && !$this->primaryImage) {
             if ($this->relationLoaded('images')) {
                 return $this->images->sortBy('sort_order')->first();
             }
@@ -135,5 +140,32 @@ class Product extends Model
     public function stock(): HasOne
     {
         return $this->hasOne(Stock::class, 'product_id')->whereNull('product_variant_id');
+    }
+
+    public function toSearchableArray(): array
+    {
+        // Ensure relationships are loaded (only if not already loaded)
+        $this->loadMissing([
+            'categories:id,name',
+            'variants:id,color,size,sku,price,product_id'
+        ]);
+
+        $categoryNames = $this->categories->pluck('name')->toArray();
+        $colors = $this->variants->pluck('color')->toArray();
+        $sizes = $this->variants->pluck('size')->toArray();
+        $prices = $this->variants->pluck('price')->toArray();
+
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'status' => $this->status->value,
+            'price' => $this->price / 100,
+            'category' => $categoryNames,
+            'variant_colors' => array_values(array_unique($colors)),
+            'variant_sizes' => array_values(array_unique($sizes)),
+            'min_price' => $prices ? min($prices) : (float)$this->price,
+            'max_price' => $prices ? max($prices) : (float)$this->price,
+        ];
     }
 }

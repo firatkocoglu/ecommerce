@@ -1,29 +1,23 @@
 <?php
 
-namespace App\Http\Requests\API\V1\Payments;
+namespace App\Http\Requests\API\V1\Orders;
 
-use App\Models\Order;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreatePaymentIntentRequest extends FormRequest
+class CancelOrderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-
-        $orderId = $this->input('order_id');
-        return Order::query()
-           ->whereKey($orderId)->where('user_id', auth()->user()->id)
-           ->exists();
+        return false;
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Services\Orders;
 
+use _PHPStan_8996d3948\Nette\Neon\Exception;
 use App\Enums\CartStatus;
 use App\Enums\OrderStatus;
 use App\Exceptions\OutOfStockException;
@@ -26,12 +27,14 @@ readonly class OrderService
         // Logic to create an order
         $userId = $orderData['user_id'];
         $cartId = $orderData['cart_id'];
+        $shippingAddressId = $orderData['shipping_address_id'];
+        $billingAddressId = $orderData['billing_address_id'] ?? null;
 
-        if (! $userId || ! $cartId) {
-            abort(422, 'User ID and Cart ID are required to create an order.');
+        if (! $userId || ! $cartId || ! $shippingAddressId) {
+            abort(422, 'User ID, Cart ID, Shipping Address ID are required to create an order.');
         }
 
-        return DB::transaction(function () use ($userId, $cartId) {
+        return DB::transaction(function () use ($userId, $cartId, $shippingAddressId, $billingAddressId) {
             // Lock the cart for further update
             $cart = Cart::whereKey($cartId)
                 ->where('user_id', $userId)
@@ -69,6 +72,8 @@ readonly class OrderService
                 'grand_total' => $cart->subtotal_gross,
                 'status' => OrderStatus::PENDING->value,
                 'currency_code' => 'TRY',
+                'shipping_address_id' => $shippingAddressId,
+                'billing_address_id' => $billingAddressId ?? $shippingAddressId,
             ]);
 
             // Attach cart items to the order
@@ -98,7 +103,7 @@ readonly class OrderService
     {
         // Logic to list orders belonging to a user
         return Order::where('user_id', $userId)
-            ->with('items:id,order_id,quantity,name,created_at')
+            ->with('items:id,order_id,quantity,unit_gross_price,subtotal_line_gross,name,created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
     }
@@ -106,16 +111,18 @@ readonly class OrderService
     /**
      * @throws Throwable
      */
-    public function markPaid(int $orderId): void
+    public function markAsCompleted(int $orderId): void
     {
         DB::transaction(function () use ($orderId) {
             // Lock the order for update
-            $order = Order::lockForUpdate()->findOrFail($orderId);
+            $order = Order::whereKey($orderId)->lockForUpdate()->firstOrFail();
 
             // If already paid, do nothing
-            if ($order->status !== OrderStatus::PENDING) {
-                return;
+            if ($order->status !== 'pending') {
+                throw new Exception('Order already processed or not in a payable state.');
             }
+
+            \Illuminate\Log\log('order found, processing stock deduction', ['order_id' => $orderId]);
 
             // Deduct stock for each item in the order
             $query = "
@@ -172,7 +179,7 @@ readonly class OrderService
 
             // Mark the order as paid
             $order->update([
-                'status' => OrderStatus::PAID->value,
+                'status' => OrderStatus::COMPLETED->value,
             ]);
         });
     }
@@ -180,14 +187,18 @@ readonly class OrderService
     /**
      * @throws Throwable
      */
-    public function cancelOrder(int $orderId): void
+    public function cancelOrder(int $userId, int $orderId): Order
     {
-        DB::transaction(function () use ($orderId) {
+        DB::transaction(function () use ($userId, $orderId) {
             // Logic to cancel an order
-            $order = Order::lockForUpdate()->findOrFail($orderId);
+            $order = Order::whereKey($orderId)
+                ->where('user_id', $userId)
+                ->lockForUpdate()->findOrFail($orderId);
 
             // If already cancelled, do nothing
-            if ($order->status === OrderStatus::CANCELLED->value) return;
+            if ($order->status === OrderStatus::CANCELLED->value) {
+                throw new Exception('Order is already cancelled.');
+            }
 
             // Only pending, processing, or failed orders can be cancelled by user
             if ($order->status === OrderStatus::PENDING->value || $order->status === OrderStatus::PROCESSING->value || $order->status === OrderStatus::FAILED->value) {
@@ -195,15 +206,11 @@ readonly class OrderService
                     'status' => OrderStatus::CANCELLED->value,
                     'cancelled_at' => NOW(),
                 ]);
+                return $order->refresh();
             } else {
-                abort(422, 'Only pending, processing, or failed orders can be cancelled.');
+                throw new Exception('Only pending or processing orders can be cancelled.');
             }
         });
-    }
-
-    public function removeItemFromOrder(int $orderId)
-    {
-        // Logic to refund an order
     }
 
     private function assertStockForOrderItems(int $cartId): void
@@ -224,7 +231,7 @@ readonly class OrderService
                 FROM cart_rows cr
                 JOIN product_variants v ON v.id = cr.product_variant_id
                 JOIN products p        ON p.id = v.product_id
-                LEFT JOIN stocks vs ON vs.product_variant_id = v.id
+                JOIN stocks vs ON vs.product_variant_id = v.id
                 WHERE cr.product_variant_id IS NOT NULL
                 ORDER BY v.id
                 FOR UPDATE OF v, vs
@@ -239,7 +246,7 @@ readonly class OrderService
                     COALESCE(ps.quantity, 0) AS available
                 FROM cart_rows cr
                 JOIN products p     ON p.id = cr.product_id
-                LEFT JOIN stocks ps ON ps.product_id = p.id
+                JOIN stocks ps ON ps.product_id = p.id
                 WHERE cr.product_variant_id IS NULL
                 ORDER BY p.id
                 FOR UPDATE OF p, ps
@@ -291,7 +298,9 @@ readonly class OrderService
                     unit_gross_price DECIMAL(10,2),
                     name TEXT
                         )
-                  ON CONFLICT (order_id, product_id, variant_key) DO NOTHING
+                  ON CONFLICT (order_id, product_id, variant_key)
+                      WHERE (variant_key > 0)
+                      DO NOTHING
                   ';
 
         DB::statement($query, [

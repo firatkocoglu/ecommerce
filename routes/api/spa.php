@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\V1\Addresses\AddressController;
 use App\Http\Controllers\API\V1\Carts\CartController;
+use App\Http\Controllers\API\V1\Orders\OrderController;
 use App\Http\Controllers\API\V1\Payments\PaymentController;
 use App\Http\Controllers\Auth\APIAuth\AuthController;
 use App\Http\Controllers\Auth\APIAuth\EmailVerificationController;
@@ -47,6 +48,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::match(['put', 'patch'], '/cart/increase-quantity', [CartController::class, 'increaseItemQuantity'])->name('cart.user.update');
             Route::match(['put', 'patch'], '/cart/decrease-quantity', [CartController::class, 'decreaseItemQuantity'])->name('cart.user.update');
 
+            // Order endpoints for authenticated users
+            Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+            Route::get('/orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');
+            Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+            Route::patch('/orders/{orderId}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
             // Payment endpoints for authenticated users
             Route::post('/payments/create-intent', [PaymentController::class, 'createPaymentIntent'])->name('payments.createIntent');
         });

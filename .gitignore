@@ -23,3 +23,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Meilisearch database files
+/data.ms
+/meilisearch_data/
+/meili_data/
+/meilisearch/*.mdb
+*.mdb

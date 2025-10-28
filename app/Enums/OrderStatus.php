@@ -4,12 +4,12 @@ namespace App\Enums;
 
 enum OrderStatus: string
 {
-    case PENDING = 'pending';
+    case PENDING = "pending";
     case PROCESSING = 'processing';
     case FAILED = 'failed';
     case SHIPPED = 'shipped';
-    case PAID = 'paid';
-    case COMPLETED = 'completed';
+    case PAID = "paid";
+    case COMPLETED = "completed";
     case CANCELLED = 'cancelled';
 
     case RETURN_REQUESTED = 'return_requested';
@@ -24,6 +24,7 @@ enum OrderStatus: string
             self::COMPLETED => 'Completed',
             self::CANCELLED => 'Cancelled',
             self::RETURN_REQUESTED => 'Return Request Submitted',
+            self::FAILED => 'Failed',
         };
     }
 }
