@@ -11,6 +11,8 @@ class Payment extends Model
 {
     use HasFactory;
 
+    protected $table = 'payments';
+
     protected $fillable = [
         'user_id',
         'order_id',
@@ -29,10 +31,6 @@ class Payment extends Model
         'exchange_rate',
     ];
 
-    protected $appends = [
-        'formatted_amount',
-    ];
-
     protected $casts = [
         'paid_at' => 'datetime',
         'payment_method' => PaymentMethod::class,
@@ -48,10 +46,5 @@ class Payment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function getFormattedAmountAttribute()
-    {
-        return number_format($this->amount, 2).' '.strtoupper($this->currency);
     }
 }

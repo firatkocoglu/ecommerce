@@ -22,6 +22,7 @@ class Order extends Model
         'status',
         'payment_method',
         'cancelled_at',
+        'updated_at',
     ];
 
     protected $casts = [
@@ -60,7 +61,7 @@ class Order extends Model
         return $this->belongsTo(Address::class, 'billing_address_id');
     }
 
-    public function payment(): HasOne|Order
+    public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
     }

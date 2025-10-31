@@ -4,14 +4,14 @@ namespace App\Enums;
 
 enum RefundStatus: string
 {
-    case Processing = 'processing';
+    case Pending = 'pending';
     case Completed = 'completed';
     case Rejected = 'rejected';
 
     public function label(): string
     {
         return match ($this) {
-            self::Processing => 'Processing',
+            self::Pending => 'pending',
             self::Completed => 'Completed',
             self::Rejected => 'Rejected',
         };

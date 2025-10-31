@@ -154,8 +154,6 @@ readonly class PaymentService
             $payment->provider_payload = $paymentIntent->toArray();
             $payment->save();
 
-            \Illuminate\Log\log('payment updated, next update order status');
-
             // Update order status
             $this->orderService->markAsCompleted($payment->order_id);
     }

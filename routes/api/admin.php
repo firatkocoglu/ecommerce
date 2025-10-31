@@ -4,6 +4,7 @@ use App\Http\Controllers\API\V1\Categories\CategoryAPIController;
 use App\Http\Controllers\API\V1\ProductImages\ProductImageApiController;
 use App\Http\Controllers\API\V1\Products\ProductApiController;
 use App\Http\Controllers\API\V1\ProductVariants\ProductVariantApiController;
+use App\Http\Controllers\API\V1\ReturnRequests\ReturnRequestController;
 use Illuminate\Support\Facades\Route;
 
 // Admin API routes
@@ -32,6 +33,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::match(['put', 'patch'], '/products/{productId}/variants/{variantId}/images/{imageId}', [ProductImageApiController::class, 'updateVariant'])->name('images.update.variant');
         Route::delete('/products/{productId}/images/delete', [ProductImageApiController::class, 'destroy'])->name('images.destroy');
         Route::delete('/products/{productId}/variants/{variantId}/images/delete', [ProductImageApiController::class, 'destroyVariant'])->name('images.destroy.variant');
+
+        // Return request endpoints for admin
+        Route::get('/admin/return-requests', [ReturnRequestController::class, 'adminIndex'])->name('returnRequests.index');
+        Route::get('/admin/return-requests/{returnRequestId}', [ReturnRequestController::class, 'adminShow'])->name('returnRequests.show');
+        Route::patch('/admin/return-requests/{returnRequestId}/approve', [ReturnRequestController::class, 'adminApprove'])->name('returnRequests.approve');
+        Route::patch('/admin/return-requests/{returnRequestId}/reject', [ReturnRequestController::class, 'adminReject'])->name('returnRequests.reject');
 
         Route::scopeBindings()->group(function () {
             Route::post('/products/{product}/variants/{variant}/images', [ProductImageApiController::class, 'store'])->name('images.store.variant');

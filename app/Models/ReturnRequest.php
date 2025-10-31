@@ -21,7 +21,8 @@ class ReturnRequest extends Model
         'notes',
         'rma_number',
         'order_id',
-        'user_id'
+        'user_id',
+        'updated_at'
     ];
 
     protected $casts = [
@@ -35,7 +36,7 @@ class ReturnRequest extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function returnRequestItems(): HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(ReturnRequestItems::class);
     }

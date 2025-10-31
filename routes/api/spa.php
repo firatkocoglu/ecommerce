@@ -4,6 +4,8 @@ use App\Http\Controllers\API\V1\Addresses\AddressController;
 use App\Http\Controllers\API\V1\Carts\CartController;
 use App\Http\Controllers\API\V1\Orders\OrderController;
 use App\Http\Controllers\API\V1\Payments\PaymentController;
+use App\Http\Controllers\API\V1\ReturnRequests\ReturnRequestController;
+use App\Http\Controllers\API\V1\StripeWebhook\StripeWebhookController;
 use App\Http\Controllers\Auth\APIAuth\AuthController;
 use App\Http\Controllers\Auth\APIAuth\EmailVerificationController;
 use App\Http\Controllers\Auth\APIAuth\PasswordResetController;
@@ -53,8 +55,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');
             Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
             Route::patch('/orders/{orderId}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
             // Payment endpoints for authenticated users
             Route::post('/payments/create-intent', [PaymentController::class, 'createPaymentIntent'])->name('payments.createIntent');
+
+            // Return Request endpoints for authenticated users
+            Route::get('/return-requests', [ReturnRequestController::class, 'index'])->name('returnRequests.index');
+            Route::get('/return-requests/{returnRequestId}', [ReturnRequestController::class, 'show'])->name('returnRequests.show');
+            Route::post('/return-requests', [ReturnRequestController::class, 'store'])->name('returnRequests.store');
+            Route::delete('/return-requests/{returnRequestId}', [ReturnRequestController::class, 'destroy'])->name('returnRequests.destroy');
         });
     });
 });

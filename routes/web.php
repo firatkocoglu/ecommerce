@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\V1\Payments\PaymentController;
+use App\Http\Controllers\API\V1\StripeWebhook\StripeWebhookController;
 use App\Http\Controllers\Auth\AdminAuth;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,7 +22,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 
 // Stripe webhook endpoint
-Route::post('/webhooks/stripe', [PaymentController::class, 'handleStripeWebhook'])->name('stripe.webhook');
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handleStripeWebhook'])->name('stripe.webhook');
 
 // Session based admin auth routes
 Route::get('/admin/login', [AdminAuth::class, 'show'])->middleware('throttle:10,1')->name('admin.login');

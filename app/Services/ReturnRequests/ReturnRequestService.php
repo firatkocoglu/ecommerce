@@ -2,18 +2,21 @@
 
 namespace App\Services\ReturnRequests;
 
+use App\Enums\PaymentStatus;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\ReturnRequest;
+use App\Services\Refunds\RefundService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use JsonException;
-use LaravelIdea\Helper\App\Models\_IH_ReturnRequest_C;
 use Throwable;
 
-class ReturnRequestService
+readonly class ReturnRequestService
 {
+
+    public function __construct(private RefundService $refundService)
+    {
+    }
     /**
      * @throws Throwable
      */
@@ -21,7 +24,6 @@ class ReturnRequestService
     {
         // Logic to create a return request
         // Data array may include order_id, reason, items.
-
         $userId = $data['user_id'];
         $orderId = $data['order_id'];
         $orderItems = $data['order_items'] ?? []; // expected : [['id' => int, 'quantity' => int], ...]
@@ -33,7 +35,7 @@ class ReturnRequestService
             }
 
             // Check if the order belongs to the user and is eligible for return
-            $order = Order::where('id', $orderId)
+            $order = Order::whereKey($orderId)
                 ->where('user_id', $userId)
                 ->whereIn('status', ['paid', 'shipped', 'completed'])
                 ->firstOrFail();
@@ -147,8 +149,8 @@ class ReturnRequestService
 
     public function getReturnRequestByUser(int $userId, int $returnRequestId): ReturnRequest
     {
-        return ReturnRequest::where('user_id', $userId)
-            ->where('id', $returnRequestId)
+        return ReturnRequest::whereKey($returnRequestId)
+            ->where('user_id', $userId)
             ->with('items')
             ->firstOrFail();
     }
@@ -195,14 +197,23 @@ class ReturnRequestService
                 ->where('status', 'pending')
                 ->firstOrFail();
 
-            // Calculate refund amount
-            $refundData = $this->calculateRefundAmount($returnRequest);
+            // Prepare refund data and calculate refund amount
+            $refundData = [
+                'return_request_id' => $returnRequest->id,
+                'order_id' => $returnRequest->order_id,
+                'user_id' => $returnRequest->user_id,
+                'amount' => $this->calculateRefundAmount($returnRequest)['amount'],
+                'currency_code' => $this->calculateRefundAmount($returnRequest)['currency_code'],
+                'reason' => 'Return approved',
+            ];
 
             $returnRequest->status = 'approved';
             $returnRequest->admin_id = $adminId;
             $returnRequest->approved_at = now();
             $returnRequest->save();
 
+            // Trigger refund process
+            $this->refundService->createRefund($refundData);
         });
     }
 
@@ -219,20 +230,23 @@ class ReturnRequestService
         $returnRequest->save();
     }
 
-    private function calculateRefundAmount(ReturnRequest $returnRequest): float
+    private function calculateRefundAmount(ReturnRequest $returnRequest): array
     {
         $query =
-            "SELECT COALESCE(SUM(ROUND(oi.unit_price * rri.quantity, 2)), 0) AS refund_amount,
+            "SELECT COALESCE(SUM(ROUND(oi.unit_gross_price * rri.quantity, 2)), 0) AS refund_amount,
             o.currency_code
             FROM return_request_items rri
             JOIN order_items oi On rri.order_item_id = oi.id
             JOIN orders o ON o.id = oi.order_id
             WHERE rri.return_request_id = :return_request_id
-            AND oi.order_id = (SELECT order_id FROM return_requests WHERE id = :return_request_id);
+            AND oi.order_id = (SELECT order_id FROM return_requests WHERE id = :return_request_id)
+            GROUP BY o.currency_code;
             ";
 
-        return DB::selectOne($query, [
+         $result = DB::selectOne($query, [
             'return_request_id' => $returnRequest->id,
         ]);
+
+         return ['amount' => (float)$result->refund_amount, 'currency_code' => $result->currency_code];
     }
 }

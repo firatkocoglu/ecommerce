@@ -5,18 +5,28 @@ namespace App\Models;
 use App\Enums\RefundStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Refund extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
+        'return_request_id',
+        'order_id',
+        'payment_id',
         'amount',
+        'currency_code',
         'reason',
         'status',
         'requested_at',
         'refunded_at',
         'rejected_at',
+        'idempotency_key',
+        'provider_event_id',
+        'provider_payload',
+        'provider_refund_id',
     ];
 
     protected $casts = [
@@ -32,27 +42,27 @@ class Refund extends Model
         'formatted_refund_amount',
     ];
 
-    public function order()
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
 
-    public function payment()
+    public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function admin()
+    public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class);
     }
 
-    public function returnRequest()
+    public function returnRequest(): BelongsTo
     {
         return $this->belongsTo(ReturnRequest::class);
     }
