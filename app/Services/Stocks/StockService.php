@@ -2,11 +2,36 @@
 
 namespace App\Services\Stocks;
 
+use App\Models\Product;
 use App\Models\Stock;
 use Illuminate\Support\Facades\DB;
 
 class StockService
 {
+    public function addStockForProduct(int $productId, int $quantity): Stock
+    {
+        $productExists = Product::whereKey($productId)
+            ->exists();
+
+        if (! $productExists) {
+            throw new \RuntimeException('Stock entry for this product already exists.');
+        }
+
+        // Check if stock entry already exists
+        $existingStock = Stock::where('product_id', $productId)
+            ->whereNull('product_variant_id')
+            ->first();
+
+        if ($existingStock) {
+            throw new \RuntimeException('Stock entry for this product already exists.');
+        }
+
+        return Stock::create([
+            'product_id' => $productId,
+            'quantity' => $quantity,
+        ]);
+    }
+
     public function getStockByProduct(int $productId): ?int
     {
         return Stock::where('product_id', $productId)

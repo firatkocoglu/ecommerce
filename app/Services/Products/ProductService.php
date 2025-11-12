@@ -58,7 +58,7 @@ class ProductService
         // Eager load relationships and counts
         $query = $query->with([
             'images' => fn ($q) => $q->orderByDesc('is_primary'),
-            'variants' => fn ($q) => $q->select(['id', 'product_id', 'sku', 'price']),
+            'stock' => fn ($q) => $q->select(['product_id', 'quantity']),
         ]);
 
         $fetch = fn () => $query->whereKey($id)->firstOrFail();

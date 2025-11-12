@@ -3,6 +3,7 @@
 namespace App\Http\Resources\API\V1\Products;
 
 use App\Http\Resources\API\V1\Categories\CategoryResource;
+use App\Http\Resources\API\V1\Stocks\StockResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,8 +27,8 @@ class ProductResource extends JsonResource
             'weight' => $this->when(array_key_exists('weight', $attrs), fn () => $this->weight),
             'status' => $this->status,
             'categories' => $this->when(array_key_exists('categories', $attrs), fn () => CategoryResource::collection($this->whenLoaded('categories'))),
-            'variants' => $this->when(array_key_exists('variants', $attrs), fn () => ProductVariantResource::collection($this->whenLoaded('variants'))),
             'images' => $this->when(array_key_exists('images', $attrs), fn () => ProductImageResource::collection($this->whenLoaded('images'))),
-        ];
+            'stock' => $this->when(array_key_exists('stock', $attrs), fn () => StockResource::make($this->whenLoaded('stock'))),
+            ];
     }
 }
