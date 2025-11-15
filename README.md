@@ -92,4 +92,4 @@ npm run dev
 php artisan test
 
 ### 👨‍💻 Author
-Fırat Koçoğlu Software Engineer • .NET & Laravel Developer 📎 [GitHub](https://github.com/firatkocoglu) | [LinkedIn](https://linkedin.com/in/firatkocoglu)
+Fırat Koçoğlu Software Engineer 📎 [GitHub](https://github.com/firatkocoglu) | [LinkedIn](https://linkedin.com/in/firatkocoglu)
