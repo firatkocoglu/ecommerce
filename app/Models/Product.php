@@ -70,7 +70,7 @@ class Product extends Model
             return $this->primaryImage;
         }
 
-        if ($this->relationLoaded('primaryImage') && !$this->primaryImage) {
+        if ($this->relationLoaded('primaryImage') && ! $this->primaryImage) {
             if ($this->relationLoaded('images')) {
                 return $this->images->sortBy('sort_order')->first();
             }
@@ -147,7 +147,7 @@ class Product extends Model
         // Ensure relationships are loaded (only if not already loaded)
         $this->loadMissing([
             'categories:id,name',
-            'variants:id,color,size,sku,price,product_id'
+            'variants:id,color,size,sku,price,product_id',
         ]);
 
         $categoryNames = $this->categories->pluck('name')->toArray();
@@ -164,8 +164,8 @@ class Product extends Model
             'category' => $categoryNames,
             'variant_colors' => array_values(array_unique($colors)),
             'variant_sizes' => array_values(array_unique($sizes)),
-            'min_price' => $prices ? min($prices) : (float)$this->price,
-            'max_price' => $prices ? max($prices) : (float)$this->price,
+            'min_price' => $prices ? min($prices) : (float) $this->price,
+            'max_price' => $prices ? max($prices) : (float) $this->price,
         ];
     }
 }

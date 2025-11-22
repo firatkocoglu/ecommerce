@@ -33,12 +33,14 @@ class CreateSuperAdmin extends Command
 
         if (empty($name) || empty($email) || empty($password)) {
             $this->error('Name, email, and password are required.');
+
             return self::FAILURE;
         }
 
         // Check if user already exists
         if (Admin::where('email', $email)->exists()) {
             $this->error('An admin with this email already exists.');
+
             return self::FAILURE;
         }
 
@@ -49,7 +51,7 @@ class CreateSuperAdmin extends Command
             'is_super_admin' => true,
         ]);
 
-        $this->info("Super admin created successfully!");
+        $this->info('Super admin created successfully!');
         $this->info("ID: {$admin->id}");
         $this->info("Email: {$admin->email}");
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API\V1\StripeWebhook;
 
-use App\Http\Requests\API\V1\Payments\CreatePaymentIntentRequest;
 use App\Services\Payments\PaymentService;
 use App\Services\Refunds\RefundService;
 use Exception;
@@ -13,10 +12,11 @@ use Throwable;
 readonly class StripeWebhookController
 {
     public function __construct(private PaymentService $paymentService, private RefundService $refundService) {}
+
     /**
      * @throws Throwable
      */
-    public function handleStripeWebhook(Request $request) : JsonResponse
+    public function handleStripeWebhook(Request $request): JsonResponse
     {
         $payload = $request->getContent();
         $signature = $request->header('Stripe-Signature');
@@ -34,11 +34,11 @@ readonly class StripeWebhookController
         }
         $eventType = $event->type;
 
-       try {
+        try {
             switch ($event->type) {
                 case 'payment_intent.succeeded':
-                   $this->paymentService->handlePaymentIntentSucceeded($event);
-                   break;
+                    $this->paymentService->handlePaymentIntentSucceeded($event);
+                    break;
                 case 'payment_intent.payment_failed':
                     $this->paymentService->handlePaymentIntentFailed($event);
                     break;
@@ -52,15 +52,14 @@ readonly class StripeWebhookController
                     return response()->json(['ignored' => $event->type], 200);
 
             }
-       }
-       catch (Exception $e) {
-              return response()->json([
-                  'error' => 'Webhook handling failed',
-                  'type' => $eventType,
-                    'message' => $e->getMessage(),
-              ], 500);
-       }
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Webhook handling failed',
+                'type' => $eventType,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
 
-       return response()->json(['status' => 'success'], 200);
+        return response()->json(['status' => 'success'], 200);
     }
 }

@@ -15,9 +15,10 @@ class CreatePaymentIntentRequest extends FormRequest
     {
 
         $orderId = $this->input('order_id');
+
         return Order::query()
-           ->whereKey($orderId)->where('user_id', auth()->user()->id)
-           ->exists();
+            ->whereKey($orderId)->where('user_id', auth()->user()->id)
+            ->exists();
     }
 
     /**

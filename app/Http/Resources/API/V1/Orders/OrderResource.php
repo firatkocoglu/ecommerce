@@ -25,6 +25,6 @@ class OrderResource extends JsonResource
             'billing_address' => AddressResource::make($this->whenLoaded('billing_address')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            ];
+        ];
     }
 }

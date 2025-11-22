@@ -7,7 +7,6 @@ use App\Http\Controllers\API\V1\ProductVariants\ProductVariantApiController;
 use App\Http\Controllers\API\V1\ReturnRequests\ReturnRequestController;
 use App\Http\Controllers\API\V1\Stocks\StockController;
 use Illuminate\Support\Facades\Route;
-use const App\Http\Controllers\API\V1\Stocks;
 
 // Admin API routes
 Route::prefix('v1')->name('api.v1.')->group(function () {

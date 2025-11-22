@@ -13,11 +13,13 @@ use Throwable;
 
 class ReturnRequestController extends Controller
 {
-    public function __construct(private readonly ReturnRequestService $returnRequestService){}
+    public function __construct(private readonly ReturnRequestService $returnRequestService) {}
+
     public function index(): AnonymousResourceCollection
     {
         $userId = auth()->user()->id;
         $returnRequests = $this->returnRequestService->listReturnRequestsByUser($userId);
+
         return ReturnRequestResource::collection($returnRequests);
     }
 
@@ -25,6 +27,7 @@ class ReturnRequestController extends Controller
     {
         $userId = auth()->user()->id;
         $returnRequest = $this->returnRequestService->getReturnRequestByUser($userId, $returnRequestId);
+
         return ReturnRequestResource::make($returnRequest);
     }
 
@@ -46,27 +49,28 @@ class ReturnRequestController extends Controller
     {
         $userId = auth()->user()->id;
         $this->returnRequestService->deleteReturnRequest($userId, $returnRequestId);
+
         return response()->json(null, 204);
     }
 
-    public function adminIndex(): JsonResponse | AnonymousResourceCollection
+    public function adminIndex(): JsonResponse|AnonymousResourceCollection
     {
-        if (! auth('admin')->check())
-        {
+        if (! auth('admin')->check()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $returnRequests = $this->returnRequestService->adminListReturnRequests();
+
         return ReturnRequestResource::collection($returnRequests);
     }
 
-    public function adminShow($returnRequestId): JsonResponse | ReturnRequestResource
+    public function adminShow($returnRequestId): JsonResponse|ReturnRequestResource
     {
-        if (! auth('admin')->check())
-        {
+        if (! auth('admin')->check()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $returnRequest = $this->returnRequestService->adminGetReturnRequest($returnRequestId);
+
         return ReturnRequestResource::make($returnRequest);
     }
 
@@ -75,20 +79,19 @@ class ReturnRequestController extends Controller
      */
     public function adminApprove($returnRequestId): JsonResponse
     {
-        if (! auth('admin')->check())
-        {
+        if (! auth('admin')->check()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $adminId = auth()->user()->id;
         $this->returnRequestService->adminApproveReturnRequest($returnRequestId, $adminId);
+
         return response()->json(null, 204);
     }
 
     public function adminReject(RejectReturnRequest $request, $returnRequestId): JsonResponse
     {
-        if (! auth('admin')->check())
-        {
+        if (! auth('admin')->check()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -96,6 +99,7 @@ class ReturnRequestController extends Controller
         $reason = $request->validated()['reason'];
 
         $this->returnRequestService->adminRejectReturnRequest($returnRequestId, $adminId, $reason);
+
         return response()->json(null, 204);
     }
 }

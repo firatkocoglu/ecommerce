@@ -9,13 +9,15 @@ use Illuminate\Http\JsonResponse;
 
 class StockController extends Controller
 {
-    public function __construct(private readonly StockService $stockService){}
+    public function __construct(private readonly StockService $stockService) {}
+
     public function store(StoreStockRequest $request): JsonResponse
     {
         $productId = $request->validated()['product_id'];
         $quantity = $request->validated()['quantity'];
 
         $created = $this->stockService->addStockForProduct($productId, $quantity);
+
         return response()->json($created, 201);
     }
 }

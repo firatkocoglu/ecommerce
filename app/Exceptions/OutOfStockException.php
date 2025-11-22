@@ -8,10 +8,10 @@ class OutOfStockException extends RuntimeException
 {
     protected array $violations;
 
-    public function __construct(string      $message = 'The requested item is out of stock.',
-                                array       $violations = [],
-                                int         $code = 409,
-                                ?\Throwable $previous = null)
+    public function __construct(string $message = 'The requested item is out of stock.',
+        array $violations = [],
+        int $code = 409,
+        ?\Throwable $previous = null)
     {
         parent::__construct($message, $code, $violations);
     }

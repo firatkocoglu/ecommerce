@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\V1\Orders;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\API\V1\Orders\CancelOrderRequest;
 use App\Http\Requests\API\V1\Orders\StoreOrderRequest;
 use App\Http\Resources\API\V1\Orders\OrderResource;
 use App\Services\Orders\OrderService;
@@ -12,6 +11,7 @@ use Throwable;
 class OrderController extends Controller
 {
     public function __construct(private readonly OrderService $orderService) {}
+
     public function index()
     {
         $userId = auth()->user()->id;

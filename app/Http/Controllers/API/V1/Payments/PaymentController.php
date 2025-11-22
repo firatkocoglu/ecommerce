@@ -9,11 +9,9 @@ use Throwable;
 
 class PaymentController
 {
-    public function __construct(private readonly PaymentService $paymentService)
-    {
-    }
+    public function __construct(private readonly PaymentService $paymentService) {}
 
-    public function createPaymentIntent (CreatePaymentIntentRequest $request): JsonResponse
+    public function createPaymentIntent(CreatePaymentIntentRequest $request): JsonResponse
     {
         try {
             [$clientSecret, $paymentId] = $this->paymentService->createPaymentIntent(

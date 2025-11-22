@@ -13,8 +13,6 @@ class AdminAuth extends Controller
         return view('admin.admin-web-login');
     }
 
-
-
     public function login(Request $request)
     {
         Auth::shouldUse('admin');

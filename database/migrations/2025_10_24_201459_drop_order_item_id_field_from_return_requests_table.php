@@ -16,10 +16,10 @@ return new class extends Migration
             $table->timestamp('rejected_at')->nullable()->after('processed_at');
             $table->string('rma_number')->unique()->nullable()->after('id');
             // Rename processed_at to approved_at
-            DB::statement("
+            DB::statement('
                 ALTER TABLE return_requests
                 RENAME COLUMN processed_at TO approved_at;
-            ");
+            ');
         });
     }
 
@@ -33,10 +33,10 @@ return new class extends Migration
             $table->dropColumn('rejected_at');
 
             // Rename approved_at back to processed_at
-            DB::statement("
+            DB::statement('
                 ALTER TABLE return_requests
                 RENAME COLUMN approved_at TO processed_at;
-            ");
+            ');
         });
     }
 };

@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('refunds', function (Blueprint $table) {
-           $table->char('currency_code', 3);
-           $table->string('idempotency_key')->unique();
-           $table->string('provider_refund_id')->nullable()->index();
-           $table->string('provider_event_id')->nullable()->index();
-           $table->json('provider_payload')->nullable();
+            $table->char('currency_code', 3);
+            $table->string('idempotency_key')->unique();
+            $table->string('provider_refund_id')->nullable()->index();
+            $table->string('provider_event_id')->nullable()->index();
+            $table->json('provider_payload')->nullable();
         });
     }
 

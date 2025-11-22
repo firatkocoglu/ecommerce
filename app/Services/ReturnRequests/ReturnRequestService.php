@@ -2,7 +2,6 @@
 
 namespace App\Services\ReturnRequests;
 
-use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\ReturnRequest;
 use App\Services\Refunds\RefundService;
@@ -13,10 +12,8 @@ use Throwable;
 
 readonly class ReturnRequestService
 {
+    public function __construct(private RefundService $refundService) {}
 
-    public function __construct(private RefundService $refundService)
-    {
-    }
     /**
      * @throws Throwable
      */
@@ -82,30 +79,32 @@ readonly class ReturnRequestService
         // Validate each item
         foreach ($orderItems as $item) {
             // If id or quantity is missing or invalid
-            if (!isset($item['id']) || !isset($item['quantity'])
-                || !is_numeric($item['quantity']) || $item['quantity'] <= 0
-                || !is_numeric($item['id']) || $item['id'] <= 0) {
+            if (! isset($item['id']) || ! isset($item['quantity'])
+                || ! is_numeric($item['quantity']) || $item['quantity'] <= 0
+                || ! is_numeric($item['id']) || $item['id'] <= 0) {
                 throw new \InvalidArgumentException('Return requests must have items.');
             }
 
             // Check if the item exists in the order
-            if (!$allOrderItemsById->has($item['id'])) {
-                throw new \InvalidArgumentException("Order item does not exist in the order.");
+            if (! $allOrderItemsById->has($item['id'])) {
+                throw new \InvalidArgumentException('Order item does not exist in the order.');
             }
 
             // Check if the item already exists in normalized items to aggregate quantity
             if (in_array($item['id'], array_column($normalizedItems, 'id'))) {
                 $index = array_search($item['id'], array_column($normalizedItems, 'id'));
-                $normalizedItems[$index]['quantity'] += (int)$item['quantity'];
+                $normalizedItems[$index]['quantity'] += (int) $item['quantity'];
+
                 continue;
             }
 
             // Add item id and quantity to normalized items
             $normalizedItems[] = [
-                'id' => (int)$item['id'],
-                'quantity' => (int)$item['quantity'],
+                'id' => (int) $item['id'],
+                'quantity' => (int) $item['quantity'],
             ];
         }
+
         return $normalizedItems;
     }
 
@@ -165,7 +164,6 @@ readonly class ReturnRequestService
 
         $returnRequest->delete();
     }
-
 
     public function adminListReturnRequests(): Collection
     {
@@ -233,7 +231,7 @@ readonly class ReturnRequestService
     private function calculateRefundAmount(ReturnRequest $returnRequest): array
     {
         $query =
-            "SELECT COALESCE(SUM(ROUND(oi.unit_gross_price * rri.quantity, 2)), 0) AS refund_amount,
+            'SELECT COALESCE(SUM(ROUND(oi.unit_gross_price * rri.quantity, 2)), 0) AS refund_amount,
             o.currency_code
             FROM return_request_items rri
             JOIN order_items oi On rri.order_item_id = oi.id
@@ -241,12 +239,12 @@ readonly class ReturnRequestService
             WHERE rri.return_request_id = :return_request_id
             AND oi.order_id = (SELECT order_id FROM return_requests WHERE id = :return_request_id)
             GROUP BY o.currency_code;
-            ";
+            ';
 
-         $result = DB::selectOne($query, [
+        $result = DB::selectOne($query, [
             'return_request_id' => $returnRequest->id,
         ]);
 
-         return ['amount' => (float)$result->refund_amount, 'currency_code' => $result->currency_code];
+        return ['amount' => (float) $result->refund_amount, 'currency_code' => $result->currency_code];
     }
 }

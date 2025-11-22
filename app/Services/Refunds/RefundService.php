@@ -4,7 +4,6 @@ namespace App\Services\Refunds;
 
 use App\Enums\PaymentStatus;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\ReturnRequest;
 use Exception;
@@ -36,8 +35,7 @@ class RefundService
             throw new Exception('Return request ID, order ID, user ID are required.');
         }
 
-        DB::transaction(function () use ($returnRequestId, $orderId, $userId, $amount, $currency, $reason)
-        {
+        DB::transaction(function () use ($returnRequestId, $orderId, $userId, $amount, $currency, $reason) {
             // Check if the return request exists and is approved
             $returnRequest = ReturnRequest::whereKey($returnRequestId)
                 ->where('order_id', $orderId)
@@ -53,7 +51,7 @@ class RefundService
                 throw new Exception('Cannot process refund for unpaid order.');
             }
 
-            $idempotencyKey = 'refund:create:pi:' . $payment->transaction_id . ':rr:' . $returnRequest->id;
+            $idempotencyKey = 'refund:create:pi:'.$payment->transaction_id.':rr:'.$returnRequest->id;
 
             $stripeClient = new \Stripe\StripeClient(
                 config('services.stripe.secret')
@@ -74,13 +72,13 @@ class RefundService
 
             // Call stripe refund API
             $stripeClient->refunds->create([
-               'payment_intent' => $payment->transaction_id,
-               'amount' => (int) ($amount * 100), // amount in cents
-               'metadata' => [
-                   'return_request_id' => $returnRequest->id,
-                   'order_id' => $orderId,
-                   'idempotency_key' => $idempotencyKey,
-                   ],
+                'payment_intent' => $payment->transaction_id,
+                'amount' => (int) ($amount * 100), // amount in cents
+                'metadata' => [
+                    'return_request_id' => $returnRequest->id,
+                    'order_id' => $orderId,
+                    'idempotency_key' => $idempotencyKey,
+                ],
             ]);
         });
     }
@@ -125,7 +123,7 @@ class RefundService
     {
         $refundData = $event->data->object;
 
-        if(! $refundData){
+        if (! $refundData) {
             throw new Exception('Refund data not found in charge refunded event.');
         }
 
@@ -144,13 +142,13 @@ class RefundService
 
         // Update order and return request status as completed
         $order->update([
-                'status' => 'returned',
-                'updated_at' => now()
-            ]);
+            'status' => 'returned',
+            'updated_at' => now(),
+        ]);
 
         $returnRequest->update([
             'status' => 'completed',
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
     }
 }

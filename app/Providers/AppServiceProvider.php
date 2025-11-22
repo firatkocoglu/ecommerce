@@ -54,10 +54,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Configure Meilisearch index settings with caching
         Cache::rememberForever('meili_products_index_settings_v1', function () {
-           $host = config('scout.meilisearch.host');
-           $key = config('scout.meilisearch.key');
+            $host = config('scout.meilisearch.host');
+            $key = config('scout.meilisearch.key');
 
-            if (! $host){
+            if (! $host) {
                 return true; // Skip if no meili is configured
             }
 

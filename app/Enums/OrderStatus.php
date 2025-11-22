@@ -4,15 +4,16 @@ namespace App\Enums;
 
 enum OrderStatus: string
 {
-    case PENDING = "pending";
+    case PENDING = 'pending';
     case PROCESSING = 'processing';
     case FAILED = 'failed';
     case SHIPPED = 'shipped';
-    case PAID = "paid";
-    case COMPLETED = "completed";
+    case PAID = 'paid';
+    case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
     case RETURN_REQUESTED = 'return_requested';
     case RETURNED = 'returned';
+
     public function label(): string
     {
         return match ($this) {

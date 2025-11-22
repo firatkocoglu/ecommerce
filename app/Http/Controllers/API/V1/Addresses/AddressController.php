@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\API\V1\Addresses;
 
 use App\Http\Controllers\Controller;
-use App\Models\Address;
-use App\Services\Addresses\AddressService;
-use Illuminate\Http\Request;
 use App\Http\Requests\API\V1\Address\StoreAddressRequest;
 use App\Http\Requests\API\V1\Address\UpdateAddressRequest;
 use App\Http\Resources\API\V1\Address\AddressResource;
+use App\Services\Addresses\AddressService;
 use Throwable;
 
 class AddressController extends Controller
 {
-public function __construct(private readonly AddressService $service) {}
+    public function __construct(private readonly AddressService $service) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -21,11 +20,13 @@ public function __construct(private readonly AddressService $service) {}
     {
         $userId = auth()->user()->id;
         $addresses = $this->service->listForUser($userId);
+
         return AddressResource::collection($addresses);
     }
 
     /**
      * Store a newly created resource in storage.
+     *
      * @throws Throwable
      */
     public function store(StoreAddressRequest $request)
@@ -50,6 +51,7 @@ public function __construct(private readonly AddressService $service) {}
 
     /**
      * Update the specified resource in storage.
+     *
      * @throws Throwable
      */
     public function update(UpdateAddressRequest $request, int $addressId)
@@ -63,6 +65,7 @@ public function __construct(private readonly AddressService $service) {}
 
     /**
      * Remove the specified resource from storage.
+     *
      * @throws Throwable
      */
     public function destroy(int $addressId)
@@ -92,4 +95,3 @@ public function __construct(private readonly AddressService $service) {}
         return response()->noContent();
     }
 }
-

@@ -206,6 +206,7 @@ readonly class OrderService
                     'status' => OrderStatus::CANCELLED->value,
                     'cancelled_at' => NOW(),
                 ]);
+
                 return $order->refresh();
             } else {
                 throw new Exception('Only pending or processing orders can be cancelled.');

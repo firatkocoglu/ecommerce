@@ -14,9 +14,8 @@ use Throwable;
 
 readonly class PaymentService
 {
-    public function __construct(private OrderService $orderService)
-    {
-    }
+    public function __construct(private OrderService $orderService) {}
+
     /**
      * @throws Exception
      * @throws Throwable
@@ -34,7 +33,7 @@ readonly class PaymentService
             throw new Exception('Payment already processed');
         }
 
-        $idempotencyKey = 'pi:create:order:' . $order->id;
+        $idempotencyKey = 'pi:create:order:'.$order->id;
 
         // Check if there is an existing payment intent for the order
         $existingIntent = Payment::query()
@@ -49,6 +48,7 @@ readonly class PaymentService
         if ($existingIntent && $existingIntent->transaction_id) {
             Stripe::setApiKey(config('services.stripe.secret'));
             $paymentIntent = PaymentIntent::retrieve($existingIntent->transaction_id);
+
             return [
                 'client_secret' => $paymentIntent->client_secret,
                 'payment_intent_id' => $paymentIntent->id,
@@ -63,9 +63,9 @@ readonly class PaymentService
 
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amountMinor,
-                'currency' => (string)$currency,
+                'currency' => (string) $currency,
                 'metadata' => [
-                    'order_id' => (string)$order->id,
+                    'order_id' => (string) $order->id,
                 ],
                 'automatic_payment_methods' => [
                     'enabled' => true,
@@ -94,7 +94,6 @@ readonly class PaymentService
      * @throws Exception
      */
 
-
     /**
      * @throws Throwable
      */
@@ -102,13 +101,12 @@ readonly class PaymentService
     {
         $paymentIntent = $paymentEvent->data->object;
 
-        DB::transaction(function () use ($paymentIntent, $paymentEvent) {
+        DB::transaction(function () use ($paymentIntent) {
             $payment = Payment::where('transaction_id', $paymentIntent->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($payment->status === 'completed')
-            {
+            if ($payment->status === 'completed') {
                 return;
             }
 
@@ -147,15 +145,15 @@ readonly class PaymentService
      */
     private function markAsPaid(Payment $payment, PaymentIntent $paymentIntent): void
     {
-            // Update payment record
-            $payment->status = 'completed';
-            $payment->paid_at = now();
-            $payment->provider_event_id = $paymentIntent->id;
-            $payment->provider_payload = $paymentIntent->toArray();
-            $payment->save();
+        // Update payment record
+        $payment->status = 'completed';
+        $payment->paid_at = now();
+        $payment->provider_event_id = $paymentIntent->id;
+        $payment->provider_payload = $paymentIntent->toArray();
+        $payment->save();
 
-            // Update order status
-            $this->orderService->markAsCompleted($payment->order_id);
+        // Update order status
+        $this->orderService->markAsCompleted($payment->order_id);
     }
 }
 

@@ -29,6 +29,6 @@ class ProductResource extends JsonResource
             'categories' => $this->when(array_key_exists('categories', $attrs), fn () => CategoryResource::collection($this->whenLoaded('categories'))),
             'images' => $this->when(array_key_exists('images', $attrs), fn () => ProductImageResource::collection($this->whenLoaded('images'))),
             'stock' => $this->when(array_key_exists('stock', $attrs), fn () => StockResource::make($this->whenLoaded('stock'))),
-            ];
+        ];
     }
 }

@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\API\V1\Addresses\AddressController;
 use App\Http\Controllers\API\V1\Carts\CartController;
+use App\Http\Controllers\API\V1\ImageIngestion\ImageIngestionController;
 use App\Http\Controllers\API\V1\Orders\OrderController;
 use App\Http\Controllers\API\V1\Payments\PaymentController;
 use App\Http\Controllers\API\V1\ReturnRequests\ReturnRequestController;
-use App\Http\Controllers\API\V1\StripeWebhook\StripeWebhookController;
 use App\Http\Controllers\Auth\APIAuth\AuthController;
 use App\Http\Controllers\Auth\APIAuth\EmailVerificationController;
 use App\Http\Controllers\Auth\APIAuth\PasswordResetController;
@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Route;
 
 // SPA API routes
 Route::prefix('v1')->name('api.v1.')->group(function () {
+    // Image ingestion endpoint
+    Route::get('/ingest/products/{productId}/images', [ImageIngestionController::class, 'countImages']);
+    Route::post('/ingest/products/{productId}/images', [ImageIngestionController::class, 'ingestImages']);
+
     Route::middleware(['web'])->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register');
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login');

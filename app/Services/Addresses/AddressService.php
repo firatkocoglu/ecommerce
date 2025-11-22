@@ -28,11 +28,11 @@ class AddressService
     /**
      * @throws Throwable
      */
-    public function create(int $userId, array $addressData): null|Address
+    public function create(int $userId, array $addressData): ?Address
     {
         return DB::transaction(function () use ($userId, $addressData) {
             // Logic to create a new address for a user
-            $isDefault = (bool)($addressData['is_default'] ?? false);
+            $isDefault = (bool) ($addressData['is_default'] ?? false);
             $addressType = $addressData['type'];
 
             // If is_default is true, unset other default addresses of the same type
@@ -58,6 +58,7 @@ class AddressService
                 }
 
             }
+
             return $created->refresh();
         });
     }
@@ -65,7 +66,7 @@ class AddressService
     /**
      * @throws Throwable
      */
-    public function update(int $userId, int $addressId, array $addressData): null|Address
+    public function update(int $userId, int $addressId, array $addressData): ?Address
     {
         // Logic to update an existing address for a user
         return DB::transaction(function () use ($userId, $addressId, $addressData) {
@@ -89,7 +90,7 @@ class AddressService
 
             $address->fill($addressData);
 
-            if(! $address->isDirty()) {
+            if (! $address->isDirty()) {
                 return $address;
             }
 
@@ -106,37 +107,37 @@ class AddressService
     {
         // Logic to delete an address for a user
         DB::transaction(function () use ($userId, $addressId) {
-        // Lock address row for deletion
-        $address = Address::whereKey($addressId)
-            ->where('user_id', $userId)
-            ->lockForUpdate()
-            ->firstOrFail();
+            // Lock address row for deletion
+            $address = Address::whereKey($addressId)
+                ->where('user_id', $userId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Is default address?
-        $wasDefault = $address->is_default;
-        $addressType = $address->type;
+            // Is default address?
+            $wasDefault = $address->is_default;
+            $addressType = $address->type;
 
-        if ($wasDefault) {
-            // Find another address of the same type to set as default
-            $newDefault = Address::where('user_id', $userId)
-                ->where('type', $addressType)
-                ->where('id', '!=', $addressId)
-                ->first();
+            if ($wasDefault) {
+                // Find another address of the same type to set as default
+                $newDefault = Address::where('user_id', $userId)
+                    ->where('type', $addressType)
+                    ->where('id', '!=', $addressId)
+                    ->first();
 
-            if ($newDefault) {
-                $newDefault->is_default = true;
-                $newDefault->save();
+                if ($newDefault) {
+                    $newDefault->is_default = true;
+                    $newDefault->save();
+                }
             }
-        }
 
-        $address->delete();
+            $address->delete();
         });
     }
 
     /**
      * @throws Throwable
      */
-    public function setDefault(int $userId, int $addressId): null|Address
+    public function setDefault(int $userId, int $addressId): ?Address
     {
         // Logic to set an address as the default for a user
         return DB::transaction(function () use ($userId, $addressId) {

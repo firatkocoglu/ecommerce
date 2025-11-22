@@ -22,7 +22,7 @@ class ReturnRequest extends Model
         'rma_number',
         'order_id',
         'user_id',
-        'updated_at'
+        'updated_at',
     ];
 
     protected $casts = [
