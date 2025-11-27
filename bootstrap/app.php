@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\OutOfStockException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -7,7 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -37,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             StartSession::class,
             ShareErrorsFromSession::class,
             EnsureFrontendRequestsAreStateful::class,
-            VerifyCsrfToken::class,
+            ValidateCsrfToken::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
@@ -45,6 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'stripe_event_webhook',
             'stripe/*',
             'webhooks/stripe',
+            'api/v1/guest/*',
+            'api/v1/guest/cart/*',
         ]);
 
         $middleware->alias([
@@ -57,4 +60,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ConvertEmptyStringsToNull::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {})->create();
+    ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->renderable(function (OutOfStockException $e, $request) {
+            return response()->json([
+                'error' => 'OUT_OF_STOCK',
+                'message' => $e->getMessage(),
+                'violations' => $e->violations(),
+            ], 409);
+        });
+    })->create();

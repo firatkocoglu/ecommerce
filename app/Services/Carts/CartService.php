@@ -136,6 +136,12 @@ readonly class CartService
 
             if (! $hasSufficientStock) {
                 throw new OutOfStockException('Insufficient stock for the requested product or variant');
+//                    abort(
+//                        response()->json([
+//                            'error'   => 'OUT_OF_STOCK',
+//                            'message' => 'Insufficient stock for the requested product or variant',
+//                        ], 409) // 422
+//                    );
             }
 
             // Define product name

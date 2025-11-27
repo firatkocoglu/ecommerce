@@ -24,12 +24,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             ->name('variants.show');
 
         // Guest cart endpoints
-        Route::get('guest/cart', [CartController::class, 'show'])->name('cart.show');
-        Route::post('guest/cart', [CartController::class, 'store'])->name('cart.store');
-        Route::post('guest/cart/add-item', [CartController::class, 'addItem'])->name('cart.addItem');
-        Route::delete('guest/cart/remove-item', [CartController::class, 'removeItem'])->name('cart.removeItem');
-        Route::delete('guest/cart/clear', [CartController::class, 'clearCart'])->name('cart.clear');
-        Route::match(['put', 'patch'], 'guest/cart/increase-quantity', [CartController::class, 'increaseItemQuantity'])->name('cart.update');
-        Route::match(['put', 'patch'], 'guest/cart/decrease-quantity', [CartController::class, 'decreaseItemQuantity'])->name('cart.update');
+        Route::get('/guest/cart', [CartController::class, 'show'])->name('cart.show');
+        Route::post('/guest/cart', [CartController::class, 'store'])->name('cart.store');
+        Route::post('/guest/cart/add-item', [CartController::class, 'addItem'])->name('cart.addItem');
+        Route::delete('/guest/cart/remove-item', [CartController::class, 'removeItem'])->name('cart.removeItem');
+        Route::delete('/guest/cart/clear', [CartController::class, 'clearCart'])->name('cart.clear');
+        Route::match(['put', 'patch'], '/guest/cart/increase-quantity', [CartController::class, 'increaseItemQuantity'])->name('cart.update');
+        Route::match(['put', 'patch'], '/guest/cart/decrease-quantity', [CartController::class, 'decreaseItemQuantity'])->name('cart.update');
     });
 });

@@ -13,7 +13,8 @@ class OutOfStockException extends RuntimeException
         int $code = 409,
         ?\Throwable $previous = null)
     {
-        parent::__construct($message, $code, $violations);
+        $this->violations = $violations;
+        parent::__construct($message, $code, $previous);
     }
 
     public function violations(): array

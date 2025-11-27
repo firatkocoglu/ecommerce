@@ -1,7 +1,8 @@
 <?php
 
-use App\Exceptions\OutOfStockException;
-use NunoMaduro\Collision\Adapters\Laravel\ExceptionHandler;
+namespace App\Exceptions;
+
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpFoundation\Response;
 
 class Handler extends ExceptionHandler
@@ -12,7 +13,7 @@ class Handler extends ExceptionHandler
             return response()->json([
                 'error' => 'OUT_OF_STOCK',
                 'message' => $e->getMessage(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY); // 422
+            ], 409); // 422 status code
         });
     }
 }
